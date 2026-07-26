@@ -1,0 +1,126 @@
+pretrained: ./checkpoints/DA3.pt
+load_only_encoder: False
+long_context: False
+fixed_length: True 
+resume: Null
+benchmark: False
+num_views: 24
+num_test_views : 4
+n_corres_train: 0
+n_corres_test: 0
+
+train_criterion: MultiTaskLoss()
+test_criterion: MultiTaskLoss()
+allow_repeat: False
+
+dataset0: Kubric_Motion(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+  aug_crop=16, resolution=[(518, 518)], 
+  transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+dataset2: PointOdyssey(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+  aug_crop=16, resolution=[(518, 294)], 
+  transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+dataset3: DynamicReplica(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+  aug_crop=16, resolution=[(518, 294)], 
+  transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+dataset4: VKITTI2(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+  aug_crop=16, resolution=[(518, 294)], 
+  transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+dataset5: Stereo4D(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+  aug_crop=16, resolution=[(518, 518)], 
+  transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+
+# dataset_depthcam1: HyperSIMDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam2: KittiDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam3: ARKitScenesDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam4: PointOdysseyDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam5: DynamicReplicaDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam6: ScanNetPPDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam7: TartanAirDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam8: VKitti2Depth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+# dataset_depthcam9: WaymoDepth(allow_repeat=${allow_repeat}, split='train', ROOT='PATH', 
+#   aug_crop=16, resolution=[(518, 294)], 
+#   transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+train_dataset:  8000 @ ${dataset0}
+
+test_dataset: 10 @ Kubric_Motion(allow_repeat=${allow_repeat}, split='val', ROOT='/data1/datasets/kubric_world/kubric_world_onesample', 
+  aug_crop=16, resolution=[(518, 392), (518, 336), (518, 294), (518, 266), (518, 210), (518, 154), (392, 518), (336, 518), (294, 518), (266, 518)], 
+  transform=SeqColorJitter, num_views=${num_views}, n_corres=${n_corres_train})
+
+seed: 0
+batch_size: 1
+accum_iter: 1
+gradient_checkpointing: False
+epochs: 100
+start_epoch: 0
+start_step: 0
+weight_decay: 0.05
+lr: 1e-4
+min_lr: 1e-7
+warmup_epochs: 0.5
+amp: 1
+freeze_module:
+  - "*backbone*"
+  - "*head*"
+  - "*cam_dec*"
+  - "*motion_decoder"
+  - "*assign_head" 
+  - "*motion_base_decoder"
+  - "*twist_decoder"
+
+num_workers: 4
+world_size: 1
+local-rank: -1
+dist_url: 'env://'
+rank: 0
+gpu: 0
+distributed: False
+dist_backend: 'nccl'
+
+eval_freq: 1
+save_freq: 1.0
+max_checkpoints: 10
+keep_freq: 1
+print_freq: 1
+print_img_freq: 50000000
+num_imgs_vis: 4
+save_dir: '../checkpoints'
+exp_name: 'EXPNAME'
+task: 'SM4RT'
+logdir: ${save_dir}/${exp_name}/logs
+output_dir: ${save_dir}/${exp_name}/
+hydra:
+  verbose: True
+  run:
+    dir: ${save_dir}/${exp_name}
+
+# nohup bash -c 'CUDA_VISIBLE_DEVICES=0,1,2,3 NCCL_DEBUG=TRACE TORCH_DISTRIBUTED_DEBUG=DETAIL HYDRA_FULL_ERROR=1 accelerate launch --num_processes 4 --multi_gpu --main_process_port 26901 ./train.py --config-name train' > ./output/EXPNAME.log 2>&1 & df -h
