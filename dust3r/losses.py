@@ -144,7 +144,6 @@ class MultiTaskLoss(MultiLoss):
 
         dataset = gts[0]['dataset'][0]
         label = gts[0]['label'][0]
-        print(dataset, label)
         assign = preds[0]["assign"]
 
         if dataset == "KubricMotion":
@@ -163,16 +162,14 @@ class MultiTaskLoss(MultiLoss):
 
             rot_loss = torch.tensor(0.0).to('cuda')
             trans_loss = torch.tensor(0.0).to('cuda')
-            for val in frg_indices:
-                mask_val = (mask_518 == val)
-                rot_loss_val, trans_loss_val = se3_loss(se3_pred[:,mask_val].unsqueeze(1), se3_gt[:,mask_val].unsqueeze(1))
-                rot_loss += rot_loss_val
-                trans_loss += trans_loss_val
-            rot_loss /= len(frg_indices)
-            trans_loss /= len(frg_indices)
+            # for val in frg_indices:
+            #     mask_val = (mask_518 == val)
+            #     rot_loss_val, trans_loss_val = se3_loss(se3_pred[:,mask_val].unsqueeze(1), se3_gt[:,mask_val].unsqueeze(1))
+            #     rot_loss += rot_loss_val
+            #     trans_loss += trans_loss_val
+            # rot_loss /= len(frg_indices)
+            # trans_loss /= len(frg_indices)
             
-            loss_bg = torch.mean(twist_pred[:,background] ** 2)
-
             entropy_loss = torch.tensor(0.0).to('cuda')
             assign_bg = assign[background]
             entropy_bg = -torch.sum(assign_bg * torch.log(assign_bg + 1e-8), dim=-1)
@@ -197,10 +194,9 @@ class MultiTaskLoss(MultiLoss):
             loss_background = 2000 * F.mse_loss(pred_track3d_disp_bg-pred_track3d_disp_bg[:1], torch.zeros_like(pred_track3d_disp_bg).to('cuda'))
 
             total = (
-                loss_motion + loss_background + 0.1 * rot_loss + 10 * trans_loss + loss_bg + 
-                (
-                    entropy_loss_fg + entropy_loss_bg
-                )
+                loss_motion + loss_background 
+                # + 0.1 * rot_loss + 10 * trans_loss 
+                (entropy_loss_fg + entropy_loss_bg)
             ) * 10
 
         else:
@@ -242,8 +238,8 @@ class MultiTaskLoss(MultiLoss):
         details = {
             "PT": float(loss_motion.detach()),
             "PTBG": float(loss_background.detach()),
-            'Rot': float(rot_loss.detach()), 
-            'Trans': float(trans_loss.detach()), 
+            # 'Rot': float(rot_loss.detach()), 
+            # 'Trans': float(trans_loss.detach()), 
             'BG': float(loss_bg.detach()),
             'ENT_FG': float(entropy_loss_fg.detach()),
             'ENT_BG': float(entropy_loss_bg.detach()),
@@ -251,4 +247,3 @@ class MultiTaskLoss(MultiLoss):
         }
 
         return total, details
-

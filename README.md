@@ -19,32 +19,19 @@
     Intelligent Vision Group, Tsinghua University&emsp; 
 </div>
 
-<!-- 
-<div>
-    <h4 align="center">
-        <a href="https://wzzheng.net/SM4RT" target='_blank'>
-        <img src="https://img.shields.io/badge/🌐-Project%20Page-blue">
+<div align="center">
+    <h4>
+        <a href="https://wzzheng.net/SM4RT" target="_blank">
+            <img src="https://img.shields.io/badge/🌐_Website-0A0A0A?style=flat-square&logoColor=white"/>
         </a>
-        <a href="http://arxiv.org/abs/2607.XXXXX" target='_blank'>
-        <img src="https://img.shields.io/badge/arXiv-2607.XXXXX-b31b1b.svg">
+        <a href="http://arxiv.org/abs/2607.XXXXX" target="_blank">
+            <img src="https://img.shields.io/badge/arXiv-B31B1B?style=flat-square&logo=arxiv&logoColor=white"/>
         </a>
-    </h4>
-</div> -->
-
-<div>
-    <h4 align="center">
-        <a href="https://wzzheng.net/SM4RT" target='_blank'>
-        <img src="https://img.shields.io/badge/🌐-Project%20Page-blue">
+        <a href="https://hf-mirror.com/shjlin/sm4rt/" target="_blank">
+            <img src="https://img.shields.io/badge/🤗_HuggingFace-FFD21E?style=flat-square&logoColor=black"/>
         </a>
-        <a href="http://arxiv.org/abs/2607.XXXXX" target='_blank'>
-        <img src="https://img.shields.io/badge/arXiv-2607.XXXXX-b31b1b.svg">
-        </a>
-        <br>
-        <a href="https://hf-mirror.com/shjlin/sm4rt/" target='_blank'>
-        <img src="https://img.shields.io/badge/🤗-Hugging%20Face-yellow">
-        </a>
-        <a href="https://www.modelscope.cn/models/shjlin/sm4rt/" target='_blank'>
-        <img src="https://img.shields.io/badge/ModelScope-ModelScope-blue">
+        <a href="https://www.modelscope.cn/models/shjlin/sm4rt/" target="_blank">
+            <img src="https://img.shields.io/badge/ModelScope-5A2D9C?style=flat-square&logo=databricks&logoColor=white"/>
         </a>
     </h4>
 </div>
@@ -133,6 +120,14 @@
     cd ./src
     python visualize.py --rgb ../assets/videos/swing/00000.jpg --ds 2
     ```
+
+## Training
+
+Configure your training setting in './config', and run:
+
+    nohup bash -c 'CUDA_VISIBLE_DEVICES=0,1,2,3 NCCL_DEBUG=TRACE TORCH_DISTRIBUTED_DEBUG=DETAIL HYDRA_FULL_ERROR=1 accelerate launch --num_processes 4 --multi_gpu --main_process_port 26901 ./train.py --config-name train' > ./output/EXPNAME.log 2>&1
+
+
 
 ## TODO
 

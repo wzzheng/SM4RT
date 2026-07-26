@@ -1,7 +1,7 @@
 pretrained: ./checkpoints/DA3.pt
 load_only_encoder: False
 long_context: False
-fixed_length: True 
+fixed_length: True
 resume: Null
 benchmark: False
 num_views: 24

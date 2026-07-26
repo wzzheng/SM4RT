@@ -43,7 +43,6 @@ def save_compare(img, gt, pred, path, mask=None):
     gt_frames = []
     for f in gt_t:
         frame = f.cpu().numpy()
-        # 归一化到[0,255]
         frame = (frame - frame.min()) / (frame.max() - frame.min() + 1e-8) * 255
         frame = np.uint8(frame)
         gt_frames.append(frame)
@@ -64,31 +63,24 @@ def save_compare(img, gt, pred, path, mask=None):
         combined_frames.append(combined)
     
     imageio.mimsave(path, combined_frames, 'GIF', duration=0.2)
-    exit()
 
 
 
 def plot_tracks_3d(gts, preds, save_path="track_comparison.png"):
     """
-    绘制并保存 3D 轨迹对比图
-    :param gts: Ground Truth 轨迹, shape (N, 3)
-    :param preds: Predicted 轨迹, shape (N, 3)
-    :param save_path: 图片保存路径
+    :param gts: Ground Truth, shape (N, 3)
+    :param preds: Predicted, shape (N, 3)
+    :param save_path:
     """
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
 
-    # 提取 x, y, z 坐标
     gt_x, gt_y, gt_z = gts[:, 0], gts[:, 1], gts[:, 2]
     pred_x, pred_y, pred_z = preds[:, 0], preds[:, 1], preds[:, 2]
 
-    # 绘制 Ground Truth (通常为红色或蓝色实线)
     ax.plot(gt_x, gt_y, gt_z, label='Ground Truth', color='blue', linewidth=2, linestyle='-')
-    # 标记起点和终点
     ax.scatter(gt_x[0], gt_y[0], gt_z[0], c='blue', marker='o', s=50)
-    # ax.text(gt_x[0], gt_y[0], gt_z[0], ' Start', color='blue')
 
-    # 绘制 Prediction (通常为绿色或橙色虚线/实线)
     ax.plot(pred_x, pred_y, pred_z, label='Prediction', color='orange', linewidth=2, linestyle='-')
     ax.scatter(pred_x[0], pred_y[0], pred_z[0], c='orange', marker='o', s=50)
 
@@ -101,13 +93,8 @@ def plot_tracks_3d(gts, preds, save_path="track_comparison.png"):
     margin = 0.05 
     ax.margins(margin) 
     
-    # 保存图片
     plt.tight_layout()
     plt.savefig(save_path, dpi=150)
-    # print(f"Image saved to {save_path}")
-    # plt.tight_layout()
-    # plt.savefig(save_path, dpi=150)
-    # print(f"Image saved to {save_path}")
 
 
 def Sum(*losses_and_masks):
@@ -339,21 +326,14 @@ def gradient_loss_multi_scale_wrapper(prediction, target, mask, scales=4, gradie
 
 
 from sm4rt.utils.transform import extri_intri_to_pose_encoding, pose_encoding_to_extri_intri, affine_inverse, as_homogeneous
-
 def compute_median_scale(pred: torch.Tensor, gt: torch.Tensor) -> float:
     pred_diff = pred[1:] - pred[:-1]  # (N-1, 3)
     gt_diff = gt[1:] - gt[:-1]        # (N-1, 3)
-    
     pred_seg_lengths = torch.norm(pred_diff, dim=1)  # (N-1,)
     gt_seg_lengths = torch.norm(gt_diff, dim=1)      # (N-1,)
-    
-    # 3. 计算逐段比例，并取中位数
     safe_pred_lengths = pred_seg_lengths.clamp(min=1e-8)
     local_scales = gt_seg_lengths / safe_pred_lengths
-    
-    # 使用 torch.median 获取中位数，完美剔除异常跳变
     median_scale = torch.median(local_scales).item()
-    
     return median_scale
 
 
