@@ -1,0 +1,3285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SM4RT · 4D Reconstruction and Structured Motion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        /* ===== Global styles ===== */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Merriweather', serif;
+            line-height: 1.8;
+            color: #1e2a3a;
+            background: #fafcff;
+            margin: 0;
+            padding: 0;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        h1, h2, h3, .sans { font-family: 'Lato', sans-serif; }
+        a { color: #1a3a5e; text-decoration: none; transition: 0.2s; }
+        a:hover { color: #b13e3e; text-decoration: underline; }
+        .container { max-width: 960px; margin: 0 auto; padding: 0 10px; }
+
+        header {
+            text-align: center;
+            padding: 30px 20px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+        h1.title {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #0b1a2b;
+            letter-spacing: -0.01em;
+        }
+        .authors {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px 20px;
+            font-size: 1.0rem;
+            margin-bottom: 8px;
+        }
+        .author-break { flex-basis: 100%; height: 0; }
+        .author-item { display: flex; align-items: center; gap: 6px; }
+        .author-name { font-weight: 700; color: #1a2c44; }
+        .author-links a { color: #4a6a8a; font-size: 0.85rem; margin-left: 3px; }
+        .author-links a:hover { color: #b13e3e; text-decoration: none; }
+        .affiliation {
+            font-style: italic;
+            color: #3e5a76;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+        }
+        .links-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 18px;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            color: #1f3a57;
+            font-family: 'Lato', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.05); border-color: #8aa0bb; text-decoration: none; }
+        .btn i { margin-right: 8px; }
+
+        section { margin-bottom: 50px; }
+        h2.section-title {
+            font-size: 2.0rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            color: #0b1e30;
+        }
+        p { margin-bottom: 1.4em; text-align: justify; }
+        .highlight { color: #b13e3e; font-weight: 700; }
+        blockquote {
+            background: #f1f6fe;
+            border-left: 5px solid #1a3a5e;
+            margin: 20px 0;
+            padding: 12px 20px;
+            font-style: italic;
+            color: #1e3a5a;
+            border-radius: 0 12px 12px 0;
+        }
+
+        /* Teaser */
+        #teaser { max-width: 1000px; margin: 20px auto; text-align: center; }
+        .teaser-image img { width: 100%; max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); }
+
+        /* Tables */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 2.5rem;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 8px 6px 6px 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            border: 1px solid #edf2f7;
+        }
+        .table-title {
+            font-family: 'Lato', sans-serif;
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin: 0.6rem 0 0.2rem 0.8rem;
+            color: #0b1e30;
+        }
+        .table-caption {
+            font-size: 0.85rem;
+            color: #4a5f7a;
+            margin: 0 0 0.6rem 0.8rem;
+        }
+        .exp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .exp-table th, .exp-table td {
+            padding: 6px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eef2f6;
+        }
+        .exp-table th {
+            background: #f4f8fe;
+            font-weight: 700;
+            color: #1a2c44;
+        }
+        .exp-table .sub-header th { background: #e9eff7; font-weight: 600; }
+        .highlight-row td:first-child { font-weight: 700; color: #b13e3e; }
+        .highlight-row { background: #fcfaff; }
+        u { text-decoration: underline; text-underline-offset: 2px; }
+
+        /* Visualization grid */
+        .viz-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .viz-item {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #eef2f6;
+        }
+        .viz-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        @media (max-width: 700px) { .viz-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 450px) { .viz-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* Video and sample selector */
+        .visualization-container {
+            margin: 30px 0 20px;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 16px 16px 12px;
+            box-shadow: 0 10px 30px -10px rgba(0,20,40,0.08);
+            border: 1px solid #eaf0f6;
+        }
+        .viewer-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 14px;
+            align-items: stretch;
+            width: 100%;
+        }
+        .viewer-panel { min-width: 0; }
+        .viewer-label {
+            margin: 0 0 6px 4px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #4a607a;
+        }
+        @media (max-width: 800px) {
+            .viewer-grid { grid-template-columns: 1fr; }
+        }
+        .visualization {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #10161e;
+        }
+        #video-frame {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            background: #10161e;
+            z-index: 2;
+            border-radius: 18px;
+        }
+        #message {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b0c4dd;
+            font-weight: 500;
+            font-size: 1.2rem;
+            background: #10161e;
+            z-index: 1;
+            border-radius: 18px;
+            pointer-events: none;
+        }
+
+        .sample-selector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 14px;
+            gap: 8px;
+            width: 100%;
+            overflow: visible;
+        }
+        .sample-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+        }
+        .sample-type-button {
+            padding: 5px 16px;
+            border: 2px solid #1a3a5e;
+            border-radius: 40px;
+            background: #1a3a5e;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Lato', sans-serif;
+        }
+        .sample-type-button.selected { background: #fff; color: #1a3a5e; }
+        .sample-type-button:not(.selected):hover { background: #274b72; }
+
+        .samples-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.2vw;
+            width: 100%;
+            margin-top: 6px;
+            padding: 12px 2px 22px;
+            overflow: visible;
+        }
+        .sample-card {
+            position: relative;
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            padding: 0;
+            border: none;
+            transition: transform 0.42s ease, flex-grow 0.42s ease, opacity 0.42s ease, filter 0.42s ease;
+            cursor: pointer;
+            transform-origin: center center;
+            overflow: visible;
+        }
+        .sample-card .sample-img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 22px;
+            cursor: pointer;
+            object-fit: cover;
+            border: 4px solid transparent;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #dce3ed;
+            box-shadow: 0 10px 22px rgba(15, 35, 65, 0.12);
+            display: block;
+        }
+        .sample-card.is-selected {
+            flex-grow: 1.22;
+            z-index: 4;
+            transform: translateY(-12px) scale(1.06);
+        }
+        .sample-card.is-left,
+        .sample-card.is-right {
+            flex-grow: 0.98;
+            z-index: 3;
+        }
+        .sample-card.is-left {
+            transform: perspective(1000px) rotateY(8deg) translateY(6px) scale(0.93);
+        }
+        .sample-card.is-right {
+            transform: perspective(1000px) rotateY(-8deg) translateY(6px) scale(0.93);
+        }
+        .sample-card.is-far {
+            flex-grow: 0.86;
+            z-index: 2;
+            transform: translateY(15px) scale(0.85);
+            opacity: 0.9;
+            filter: saturate(0.88);
+        }
+        .sample-card .sample-img.selected {
+            border-color: #b13e3e;
+            box-shadow: 0 18px 30px rgba(177, 62, 62, 0.24);
+        }
+        .sample-card:hover:not(.is-selected) {
+            transform: translateY(-2px) scale(0.96);
+        }
+        .sub-buttons { display: none; }
+        .sub-btn { display: none; }
+        @media (max-width: 900px) {
+            .samples-row {
+                gap: 8px;
+                padding-bottom: 14px;
+            }
+            .sample-card.is-selected { transform: translateY(-8px) scale(1.04); }
+            .sample-card.is-left { transform: translateY(4px) scale(0.92); }
+            .sample-card.is-right { transform: translateY(4px) scale(0.92); }
+            .sample-card.is-far { transform: translateY(10px) scale(0.84); }
+        }
+        @media (max-width: 600px) {
+            .samples-row {
+                gap: 6px;
+                padding-bottom: 8px;
+            }
+            .sample-card .sample-img {
+                border-radius: 14px;
+                border-width: 3px;
+            }
+        }
+
+        /* 3D Card */
+        .card {
+            width: 100%;
+            max-width: 1100px;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -12px rgba(0,20,40,0.15);
+            padding: 16px 16px 14px;
+            margin: 30px auto 0;
+            border: 1px solid #eaf0f6;
+        }
+        #three-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #eef2f6;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+        }
+        #three-container canvas { display: block; width: 100% !important; height: 100% !important; }
+        .info-badge {
+            position: absolute;
+            top: 12px; left: 14px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(4px);
+            padding: 4px 16px 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            color: #1a2634;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(255,255,255,0.5);
+            z-index: 10;
+            pointer-events: none;
+        }
+        .badge-path { font-weight: 600; color: #b13e3e; background: rgba(177,62,62,0.06); padding: 0 8px; border-radius: 20px; }
+        .info-badge,
+        .status-toast,
+        .hint-tip { display: none !important; }
+        .status-toast {
+            position: absolute;
+            bottom: 14px; right: 14px;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(4px);
+            padding: 3px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: #1f2a36;
+            border: 1px solid rgba(255,255,255,0.4);
+            z-index: 10;
+            pointer-events: none;
+        }
+        .hint-tip {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.6);
+            backdrop-filter: blur(4px);
+            padding: 2px 18px;
+            border-radius: 60px;
+            font-size: 11px;
+            color: #1f2a36;
+            border: 1px solid rgba(255,255,255,0.3);
+            pointer-events: none;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            margin-top: 14px;
+            background: #ffffff;
+            padding: 6px 12px 6px 16px;
+            border-radius: 60px;
+            border: 1px solid #e6ecf3;
+        }
+        .controls-left, .controls-center, .controls-right { display: flex; align-items: center; gap: 6px; }
+        .ctrl-btn {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            width: 32px; height: 32px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1f334a;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .ctrl-btn:hover { background: rgba(177,62,62,0.06); color: #b13e3e; }
+        .ctrl-btn.active { color: #b13e3e; background: rgba(177,62,62,0.08); }
+        .frame-info {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2c44;
+            min-width: 70px;
+            text-align: center;
+            background: #f2f6fc;
+            padding: 0 10px;
+            border-radius: 40px;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #d5dee9;
+            height: 4px;
+            border-radius: 4px;
+            outline: none;
+            flex: 1;
+            min-width: 50px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #b13e3e;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .speed-group, .point-size-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #2c405a;
+            background: #f2f6fc;
+            padding: 0 10px 0 12px;
+            border-radius: 40px;
+        }
+        .speed-group input[type="range"] { width: 48px; min-width: 32px; }
+        .point-size-group input[type="range"] { width: 56px; min-width: 40px; }
+        .speed-group span, .point-size-group span { min-width: 28px; font-weight: 600; color: #b13e3e; }
+        @media (max-width: 700px) {
+            .controls-bar { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 14px; border-radius: 28px; }
+            .controls-right { justify-content: flex-end; }
+        }
+
+
+        /* Method comparison window */
+        .comparison-container {
+            margin: 42px 0 24px;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 18px 16px 14px;
+            box-shadow: 0 12px 34px -12px rgba(0,20,40,0.12);
+            border: 1px solid #eaf0f6;
+        }
+        .comparison-heading {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .comparison-heading h3 {
+            margin: 0;
+            font-family: 'Lato', sans-serif;
+        }
+        .comparison-note {
+            display: none;
+            margin: 0;
+            font-size: 0.78rem;
+            color: #64748b;
+            text-align: left;
+        }
+        .comparison-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border: 1px solid #e3eaf3;
+            border-radius: 18px;
+            background: #f8fbff;
+        }
+        .comparison-control-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .comparison-control-label {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748b;
+            margin-right: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .compare-toggle-btn {
+            border: 1px solid #cbd5e1;
+            background: #fff;
+            color: #29415e;
+            border-radius: 999px;
+            padding: 4px 11px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s ease;
+        }
+        .compare-toggle-btn:hover { border-color: #8aa0bb; transform: translateY(-1px); }
+        .compare-toggle-btn.active {
+            color: #fff;
+            border-color: #b13e3e;
+            background: #b13e3e;
+            box-shadow: 0 4px 10px rgba(177,62,62,0.18);
+        }
+        .comparison-stage {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 14px;
+        }
+        .comparison-panel {
+            min-width: 0;
+            border: 1px solid #e1e8f0;
+            border-radius: 20px;
+            background: #fbfdff;
+            overflow: hidden;
+        }
+        .comparison-panel.ours-panel { border-color: rgba(177,62,62,0.35); }
+        .comparison-panel-header {
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 12px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #20364f;
+            background: #f4f8fd;
+            border-bottom: 1px solid #e4ebf3;
+        }
+        .comparison-panel.ours-panel .comparison-panel-header { background: rgba(177,62,62,0.055); }
+        .ours-badge {
+            border-radius: 999px;
+            padding: 2px 8px;
+            color: #9f3535;
+            background: rgba(177,62,62,0.10);
+            font-size: 0.68rem;
+        }
+        .comparison-modality-badge {
+            color: #64748b;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+        .comparison-viewport {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: #10161e;
+        }
+        .comparison-video,
+        .comparison-ply-view {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.18s ease;
+        }
+        .comparison-video {
+            object-fit: contain;
+            background: #10161e;
+            opacity: 1;
+            z-index: 2;
+        }
+        .comparison-ply-view {
+            opacity: 0;
+            z-index: 3;
+            pointer-events: none;
+            background: #eef2f6;
+        }
+        .comparison-ply-view canvas { display: block; width: 100% !important; height: 100% !important; }
+        .comparison-viewport.pointcloud-mode .comparison-video {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .comparison-viewport.pointcloud-mode .comparison-ply-view {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .comparison-message {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            color: #b8c8dc;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.86rem;
+            text-align: center;
+            background: rgba(16,22,30,0.88);
+            pointer-events: none;
+        }
+        .comparison-message.hidden { display: none; }
+        .comparison-status-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 10px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.68rem;
+            color: #64748b;
+            border-top: 1px solid #e7edf4;
+            background: #fff;
+        }
+        .comparison-controls {
+            display: grid;
+            grid-template-columns: auto minmax(120px, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            margin-top: 13px;
+            padding: 7px 10px;
+            border: 1px solid #e4ebf3;
+            border-radius: 18px;
+            background: #f8fbff;
+        }
+        .comparison-play-group,
+        .comparison-options {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .compare-icon-btn {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 50%;
+            background: #fff;
+            color: #263f5b;
+            cursor: pointer;
+            box-shadow: inset 0 0 0 1px #dbe4ee;
+        }
+        .compare-icon-btn.active { color: #fff; background: #b13e3e; box-shadow: none; }
+        .comparison-time-info {
+            min-width: 82px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #29415e;
+            text-align: center;
+        }
+        .comparison-options label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #fff;
+            box-shadow: inset 0 0 0 1px #e0e8f1;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.68rem;
+            color: #52677f;
+            white-space: nowrap;
+        }
+        .comparison-options input[type="range"] { width: 58px; min-width: 42px; }
+        .comparison-options output { min-width: 30px; color: #b13e3e; font-weight: 700; }
+        .sample-name {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #405a75;
+            text-transform: capitalize;
+        }
+        @media (max-width: 800px) {
+            .comparison-stage { grid-template-columns: 1fr; }
+            .comparison-controls { grid-template-columns: 1fr; }
+            .comparison-play-group, .comparison-options { justify-content: center; flex-wrap: wrap; }
+        }
+
+        .citation pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f6faff;
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid #e2eaf5;
+            font-size: 0.85rem;
+            color: #1a2c44;
+        }
+        footer {
+            text-align: center;
+            padding: 30px 0 10px;
+            color: #7a8fa8;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 30px;
+        }
+
+        /* ===== Modern dark product theme ===== */
+        :root {
+            --bg: #07080b;
+            --bg-elevated: #0b0d12;
+            --panel: rgba(17, 19, 25, 0.90);
+            --panel-solid: #111319;
+            --panel-soft: #151821;
+            --panel-hover: #1a1e28;
+            --line: rgba(255, 255, 255, 0.09);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #f5f7fb;
+            --text-soft: #c7ccd7;
+            --muted: #8b92a1;
+            --dim: #5e6572;
+            --accent: #aeb8ff;
+            --accent-strong: #c7ceff;
+            --accent-soft: rgba(174, 184, 255, 0.14);
+            --accent-faint: rgba(174, 184, 255, 0.07);
+            --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        }
+        html {
+            background: var(--bg);
+            color-scheme: dark;
+            scroll-behavior: smooth;
+        }
+        body {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 28px 56px;
+            color: var(--text);
+            background:
+                radial-gradient(900px 420px at 50% -160px, rgba(122, 137, 255, 0.17), transparent 68%),
+                radial-gradient(760px 400px at 100% 18%, rgba(76, 125, 255, 0.07), transparent 72%),
+                var(--bg);
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.65;
+        }
+        ::selection {
+            background: rgba(174, 184, 255, 0.35);
+            color: #ffffff;
+        }
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 0;
+        }
+        h1, h2, h3, .sans,
+        .btn, .viewer-label, .comparison-heading h3,
+        .comparison-panel-header, .comparison-control-label,
+        .compare-toggle-btn, .comparison-message,
+        .comparison-status-row, .comparison-time-info,
+        .comparison-options label, .frame-info,
+        .speed-group, .point-size-group,
+        .table-title, .exp-table {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        a {
+            color: var(--text-soft);
+            text-decoration: none;
+        }
+        a:hover {
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        header {
+            text-align: left;
+            padding: 72px 4px 36px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+        h1.title {
+            max-width: 1100px;
+            margin: 0 0 24px;
+            color: #ffffff;
+            font-size: clamp(2.45rem, 5.4vw, 5.4rem);
+            line-height: 0.98;
+            letter-spacing: -0.065em;
+            font-weight: 650;
+            text-wrap: balance;
+        }
+        h1.title::before { content: none; }
+        .authors {
+            justify-content: flex-start;
+            gap: 8px 18px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .author-name {
+            color: var(--text-soft);
+            font-weight: 500;
+        }
+        .author-links a {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+        .author-links a:hover { color: #ffffff; }
+        .affiliation {
+            color: var(--muted);
+            font-style: normal;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .links-bar {
+            justify-content: flex-start;
+            gap: 10px;
+        }
+        .btn {
+            min-height: 42px;
+            padding: 9px 16px;
+            color: var(--text-soft);
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            box-shadow: none;
+            font-weight: 500;
+            font-size: 0.88rem;
+            backdrop-filter: blur(14px);
+        }
+        .btn:hover {
+            color: #0b0d12;
+            background: #ffffff;
+            border-color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+        }
+
+        section { margin-bottom: 72px; }
+        h2.section-title {
+            color: #ffffff;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 14px;
+            margin-bottom: 24px;
+            font-size: clamp(1.55rem, 2.2vw, 2.25rem);
+            letter-spacing: -0.035em;
+            font-weight: 580;
+        }
+        h2.section-title::before { content: none; }
+        p {
+            color: var(--text-soft);
+            text-align: left;
+        }
+        .highlight { color: #ffffff; }
+        blockquote {
+            color: var(--text-soft);
+            background: var(--accent-faint);
+            border-left: 2px solid var(--accent);
+            border-radius: 0 14px 14px 0;
+            padding: 18px 20px;
+        }
+
+        #teaser {
+            max-width: 1320px;
+            margin: 44px auto 72px;
+        }
+        .teaser-image img {
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background: var(--panel-solid);
+            box-shadow: var(--shadow);
+        }
+        #teaser p { color: var(--muted) !important; }
+
+        .table-wrapper {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: none;
+            backdrop-filter: blur(18px);
+        }
+        .table-title {
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 560;
+        }
+        .table-caption { color: var(--muted); }
+        .exp-table { color: var(--text-soft); }
+        .exp-table th, .exp-table td {
+            border-bottom-color: var(--line);
+            padding: 10px 12px;
+        }
+        .exp-table th {
+            color: #eef1f8;
+            background: rgba(255, 255, 255, 0.035);
+            font-weight: 560;
+        }
+        .exp-table .sub-header th {
+            background: rgba(255, 255, 255, 0.022);
+        }
+        .highlight-row { background: var(--accent-faint); }
+        .highlight-row td:first-child { color: var(--accent-strong); }
+
+        .viz-grid { gap: 10px; }
+        .viz-item {
+            background: var(--panel-solid);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+        }
+
+        .visualization-container,
+        .comparison-container {
+            position: relative;
+            background: linear-gradient(180deg, rgba(22, 24, 31, 0.93), rgba(14, 16, 21, 0.96));
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+        .visualization-container::before,
+        .comparison-container::before { content: none; }
+        .visualization-container {
+            margin: 26px 0 22px;
+            padding: 22px;
+        }
+        .comparison-container {
+            margin: 22px 0 54px;
+            padding: 22px;
+        }
+        .visualization-container h3,
+        .comparison-heading h3 {
+            color: #ffffff;
+            font-family: 'Inter', system-ui, sans-serif !important;
+            font-size: 1.02rem;
+            letter-spacing: -0.015em;
+            text-transform: none;
+            font-weight: 560;
+        }
+        .visualization-container h3::before,
+        .comparison-heading h3::before { content: none; }
+        .viewer-grid { gap: 14px; }
+        .viewer-label {
+            margin: 0 0 8px 2px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            letter-spacing: 0.01em;
+            text-transform: none;
+            font-weight: 500;
+        }
+        .visualization,
+        #three-container,
+        .comparison-viewport {
+            background: #090b0f;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+        }
+        #video-frame,
+        .comparison-video {
+            background: #090b0f;
+            border-radius: 16px;
+        }
+        #message,
+        .comparison-message {
+            color: var(--muted);
+            background: rgba(9, 11, 15, 0.92);
+            border-radius: 16px;
+            font-weight: 500;
+        }
+
+        .samples-row { gap: 12px; }
+        .sample-card .sample-img {
+            border-radius: 16px;
+            border-color: var(--line);
+            box-shadow: none;
+            filter: saturate(0.92) contrast(1.02);
+        }
+        .sample-card .sample-img.selected {
+            border-color: rgba(210, 216, 255, 0.92);
+            box-shadow: 0 0 0 1px rgba(174, 184, 255, 0.26), 0 18px 46px rgba(0, 0, 0, 0.38);
+        }
+        .sample-card.is-left,
+        .sample-card.is-right,
+        .sample-card.is-far { opacity: 0.62; }
+        .sample-card.is-selected { opacity: 1; }
+
+        .controls-bar,
+        .comparison-toolbar,
+        .comparison-controls {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: none;
+        }
+        .controls-bar { padding: 8px 10px 8px 12px; }
+        .ctrl-btn,
+        .compare-icon-btn {
+            color: var(--text-soft);
+            background: transparent;
+            border-radius: 10px;
+            box-shadow: none;
+        }
+        .ctrl-btn:hover,
+        .ctrl-btn.active,
+        .compare-icon-btn:hover,
+        .compare-icon-btn.active {
+            color: #0b0d12;
+            background: #ffffff;
+            box-shadow: none;
+        }
+        .frame-info,
+        .comparison-time-info,
+        .speed-group,
+        .point-size-group,
+        .comparison-options label {
+            color: var(--text-soft);
+            background: rgba(255, 255, 255, 0.045);
+            border-radius: 999px;
+            box-shadow: none;
+        }
+        .speed-group span,
+        .point-size-group span,
+        .comparison-options output { color: var(--accent-strong); }
+        input[type='range'] { background: rgba(255, 255, 255, 0.16); }
+        input[type='range']::-webkit-slider-thumb {
+            background: #ffffff;
+            border-color: rgba(7, 8, 11, 0.85);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+        input[type='range']::-moz-range-thumb {
+            background: #ffffff;
+            border: 2px solid rgba(7, 8, 11, 0.85);
+        }
+
+        .comparison-toolbar {
+            padding: 9px;
+            gap: 10px;
+        }
+        .comparison-control-group {
+            background: transparent;
+            gap: 6px;
+        }
+        .comparison-control-label {
+            color: var(--muted);
+            font-size: 0.73rem;
+            font-weight: 500;
+        }
+        .compare-toggle-btn {
+            color: var(--text-soft);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .compare-toggle-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--line);
+            transform: none;
+        }
+        .compare-toggle-btn.active {
+            color: #0b0d12;
+            background: #ffffff;
+            border-color: #ffffff;
+            box-shadow: none;
+        }
+        .comparison-stage { gap: 14px; }
+        .comparison-panel {
+            background: #0c0e13;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+        }
+        .comparison-panel.ours-panel {
+            border-color: rgba(174, 184, 255, 0.36);
+        }
+        .comparison-panel-header {
+            color: #f0f3f8;
+            background: rgba(255, 255, 255, 0.025);
+            border-bottom-color: var(--line);
+            font-weight: 550;
+        }
+        .comparison-panel.ours-panel .comparison-panel-header {
+            background: var(--accent-faint);
+        }
+        .ours-badge {
+            color: #d9deff;
+            background: var(--accent-soft);
+            border: 1px solid rgba(174, 184, 255, 0.22);
+            border-radius: 999px;
+        }
+        .comparison-modality-badge { color: var(--muted); }
+        .comparison-ply-view { background: #090b0f; }
+        .comparison-status-row {
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.018);
+            border-top-color: var(--line);
+        }
+
+        .citation pre {
+            color: #cdd2de;
+            background: var(--panel-solid);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            font-family: 'IBM Plex Mono', ui-monospace, monospace;
+        }
+        footer {
+            color: var(--dim);
+            border-top-color: var(--line);
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 0 16px 42px; }
+            header { padding-top: 48px; }
+            h1.title { font-size: clamp(2.25rem, 10vw, 4rem); }
+        }
+        @media (max-width: 700px) {
+            .visualization-container,
+            .comparison-container { padding: 14px; border-radius: 18px; }
+            .visualization,
+            #three-container,
+            .comparison-viewport { border-radius: 13px; }
+            .comparison-toolbar { align-items: stretch; }
+            .comparison-control-group { justify-content: flex-start; flex-wrap: wrap; }
+        }
+
+
+        /* ===== Refined contrast and interaction system ===== */
+        :root {
+            --accent: #93a4ff;
+            --accent-strong: #d9deff;
+            --accent-hot: #7c91ff;
+            --accent-cyan: #72d8ff;
+            --accent-soft: rgba(147, 164, 255, 0.16);
+            --accent-faint: rgba(147, 164, 255, 0.075);
+        }
+
+        /* Tables: make best values and the proposed method unmistakable */
+        .table-wrapper {
+            padding: 12px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)),
+                var(--panel);
+            border-color: rgba(255,255,255,0.11);
+        }
+        .exp-table {
+            font-variant-numeric: tabular-nums;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .exp-table th,
+        .exp-table td {
+            border-bottom: 1px solid rgba(255,255,255,0.075);
+            transition: background-color 160ms ease, color 160ms ease;
+        }
+        .exp-table tbody tr:hover td {
+            background: rgba(255,255,255,0.032);
+            color: #f4f6fb;
+        }
+        .exp-table td:first-child {
+            color: #e5e8ef;
+            font-weight: 560;
+            text-align: left;
+        }
+        .exp-table b,
+        .exp-table strong {
+            color: #ffffff;
+            font-weight: 780;
+            letter-spacing: -0.01em;
+            text-shadow: 0 0 18px rgba(147,164,255,0.22);
+        }
+        .exp-table u {
+            color: #eef1ff;
+            text-decoration-color: var(--accent-hot);
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+        }
+        .highlight-row td {
+            color: #e9ecf5;
+            background:
+                linear-gradient(90deg, rgba(147,164,255,0.14), rgba(114,216,255,0.045) 58%, transparent);
+            border-top: 1px solid rgba(147,164,255,0.18);
+            border-bottom: 1px solid rgba(147,164,255,0.18);
+        }
+        .highlight-row td:first-child {
+            color: #ffffff;
+            box-shadow: inset 3px 0 0 var(--accent-hot);
+            font-weight: 720;
+        }
+        .highlight-row b,
+        .highlight-row strong {
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(124,145,255,0.32);
+        }
+
+        /* Shared button language: precise, layered, and product-like */
+        .btn,
+        .ctrl-btn,
+        .compare-icon-btn,
+        .compare-toggle-btn {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            transition:
+                transform 160ms ease,
+                border-color 160ms ease,
+                background-color 160ms ease,
+                color 160ms ease,
+                box-shadow 160ms ease;
+        }
+        .btn::before,
+        .ctrl-btn::before,
+        .compare-icon-btn::before,
+        .compare-toggle-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0;
+            background: linear-gradient(135deg, rgba(147,164,255,0.22), rgba(114,216,255,0.08));
+            transition: opacity 160ms ease;
+        }
+        .btn:hover::before,
+        .ctrl-btn:hover::before,
+        .compare-icon-btn:hover::before,
+        .compare-toggle-btn:hover::before {
+            opacity: 1;
+        }
+
+        /* Header actions */
+        .btn {
+            min-height: 44px;
+            padding: 9px 15px 9px 17px;
+            gap: 8px;
+            color: #e8ebf3;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 13px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.055);
+        }
+        .btn::after {
+            content: '↗';
+            display: inline-grid;
+            place-items: center;
+            width: 21px;
+            height: 21px;
+            margin-left: 3px;
+            border-radius: 7px;
+            color: var(--accent-strong);
+            background: rgba(147,164,255,0.12);
+            font-size: 0.72rem;
+            transition: transform 160ms ease, background-color 160ms ease;
+        }
+        .btn:hover {
+            color: #ffffff;
+            background: rgba(255,255,255,0.075);
+            border-color: rgba(147,164,255,0.42);
+            transform: translateY(-2px);
+            box-shadow:
+                0 14px 34px rgba(0,0,0,0.26),
+                inset 0 1px 0 rgba(255,255,255,0.08);
+        }
+        .btn:hover::after {
+            transform: translate(1px,-1px);
+            background: rgba(147,164,255,0.2);
+        }
+
+        /* Playback controls */
+        .controls-bar,
+        .comparison-controls {
+            background: linear-gradient(180deg, rgba(255,255,255,0.052), rgba(255,255,255,0.026));
+            border-color: rgba(255,255,255,0.105);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+        }
+        .ctrl-btn,
+        .compare-icon-btn {
+            width: 38px;
+            height: 38px;
+            color: #d6dae4;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.075);
+            border-radius: 12px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .ctrl-btn:hover,
+        .compare-icon-btn:hover {
+            color: #ffffff;
+            background: rgba(255,255,255,0.075);
+            border-color: rgba(147,164,255,0.35);
+            transform: translateY(-1px);
+        }
+        .ctrl-btn.active,
+        .compare-icon-btn.active {
+            color: #090b10;
+            background: linear-gradient(135deg, #f4f6ff, #aebaff 58%, #82dcff);
+            border-color: rgba(221,227,255,0.9);
+            box-shadow:
+                0 8px 26px rgba(91,112,255,0.24),
+                inset 0 1px 0 rgba(255,255,255,0.72);
+        }
+        .ctrl-btn:active,
+        .compare-icon-btn:active,
+        .compare-toggle-btn:active,
+        .btn:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        /* Segmented comparison switches */
+        .comparison-toolbar {
+            padding: 10px;
+            gap: 10px;
+            background: rgba(8,10,15,0.62);
+            border-color: rgba(255,255,255,0.095);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.035),
+                0 16px 38px rgba(0,0,0,0.16);
+        }
+        .comparison-control-group {
+            padding: 4px;
+            border: 1px solid rgba(255,255,255,0.075);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.025);
+        }
+        .comparison-control-label {
+            padding: 0 8px 0 5px;
+            color: #747c8c;
+            letter-spacing: 0.075em;
+            text-transform: uppercase;
+            font-size: 0.66rem;
+        }
+        .compare-toggle-btn {
+            min-height: 34px;
+            padding: 6px 12px;
+            color: #aeb4c0;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 10px;
+        }
+        .compare-toggle-btn:hover {
+            color: #f5f7fb;
+            background: rgba(255,255,255,0.055);
+            border-color: rgba(255,255,255,0.075);
+            transform: none;
+        }
+        .compare-toggle-btn.active {
+            color: #ffffff;
+            background:
+                linear-gradient(135deg, rgba(147,164,255,0.28), rgba(114,216,255,0.12)),
+                rgba(255,255,255,0.06);
+            border-color: rgba(147,164,255,0.44);
+            box-shadow:
+                0 8px 24px rgba(45,57,120,0.22),
+                inset 0 1px 0 rgba(255,255,255,0.11);
+        }
+        .compare-toggle-btn.active::after {
+            content: '';
+            position: absolute;
+            left: 20%;
+            right: 20%;
+            bottom: 3px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+        }
+
+        /* Small information pills */
+        .frame-info,
+        .comparison-time-info,
+        .speed-group,
+        .point-size-group,
+        .comparison-options label {
+            min-height: 34px;
+            border: 1px solid rgba(255,255,255,0.075);
+            background: rgba(255,255,255,0.032);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+        .speed-group span,
+        .point-size-group span,
+        .comparison-options output {
+            color: #dce1ff;
+        }
+
+        /* Better keyboard affordance */
+        .btn:focus-visible,
+        .ctrl-btn:focus-visible,
+        .compare-icon-btn:focus-visible,
+        .compare-toggle-btn:focus-visible,
+        .sample-card:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 3px;
+        }
+
+
+        /* ===== Alignment, math glyph, and table interaction refinements ===== */
+        .math-symbol {
+            font-family: "Times New Roman", "STIX Two Math", Georgia, serif;
+            font-style: italic;
+            font-weight: 600;
+            color: #f4f6ff;
+            letter-spacing: 0;
+        }
+        .math-symbol sub {
+            font-size: 0.72em;
+            vertical-align: -0.28em;
+        }
+
+        .controls-left,
+        .comparison-play-group {
+            align-items: center;
+        }
+        .ctrl-btn,
+        .compare-icon-btn {
+            display: inline-grid;
+            place-items: center;
+            padding: 0;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        .ctrl-btn i,
+        .compare-icon-btn i {
+            display: block;
+            width: 1em;
+            line-height: 1;
+            text-align: center;
+            font-size: 0.98rem;
+            transform: translateZ(0);
+        }
+        .frame-info,
+        .comparison-time-info {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 14px;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Use one consistent fill across every cell in a highlighted row. */
+        .highlight-row td {
+            background: rgba(122, 137, 196, 0.17) !important;
+            border-top-color: rgba(147, 164, 255, 0.20);
+            border-bottom-color: rgba(147, 164, 255, 0.20);
+        }
+        .highlight-row td:first-child {
+            box-shadow: inset 3px 0 0 var(--accent-hot);
+        }
+
+        /* Hover feedback is a restrained luminous frame around the full row. */
+        .exp-table tbody tr:hover td {
+            color: #f4f6fb;
+            background-color: inherit;
+            box-shadow:
+                inset 0 1px 0 rgba(163, 178, 255, 0.58),
+                inset 0 -1px 0 rgba(163, 178, 255, 0.58),
+                0 0 10px rgba(101, 124, 255, 0.05);
+        }
+        .exp-table tbody tr:hover td:first-child {
+            box-shadow:
+                inset 1px 0 0 rgba(163, 178, 255, 0.58),
+                inset 0 1px 0 rgba(163, 178, 255, 0.58),
+                inset 0 -1px 0 rgba(163, 178, 255, 0.58),
+                0 0 12px rgba(101, 124, 255, 0.07);
+            border-radius: 8px 0 0 8px;
+        }
+        .exp-table tbody tr:hover td:last-child {
+            box-shadow:
+                inset -1px 0 0 rgba(163, 178, 255, 0.58),
+                inset 0 1px 0 rgba(163, 178, 255, 0.58),
+                inset 0 -1px 0 rgba(163, 178, 255, 0.58),
+                0 0 12px rgba(101, 124, 255, 0.07);
+            border-radius: 0 8px 8px 0;
+        }
+        .exp-table tbody .highlight-row:hover td {
+            background: rgba(122, 137, 196, 0.17) !important;
+        }
+        .exp-table tbody .highlight-row:hover td:first-child {
+            box-shadow:
+                inset 3px 0 0 var(--accent-hot),
+                inset 0 1px 0 rgba(174, 187, 255, 0.68),
+                inset 0 -1px 0 rgba(174, 187, 255, 0.68);
+        }
+
+        .motion-base-caption {
+            margin: 0.4rem 0 1.25rem;
+            text-align: center;
+            color: #b8c2d6;
+            font-size: 1rem;
+            font-weight: 450;
+            letter-spacing: 0.005em;
+        }
+
+
+
+        /* ===== Light product theme: white canvas, dark typography ===== */
+        :root {
+            --bg: #f5f7fb;
+            --bg-elevated: #ffffff;
+            --panel: rgba(255, 255, 255, 0.94);
+            --panel-solid: #ffffff;
+            --panel-soft: #f7f9fc;
+            --panel-hover: #eef2f8;
+            --line: rgba(15, 23, 42, 0.10);
+            --line-strong: rgba(15, 23, 42, 0.18);
+            --text: #101828;
+            --text-soft: #344054;
+            --muted: #667085;
+            --dim: #98a2b3;
+            --accent: #5b6cff;
+            --accent-strong: #3043c7;
+            --accent-hot: #4f61ef;
+            --accent-cyan: #2783ff;
+            --accent-soft: rgba(91, 108, 255, 0.12);
+            --accent-faint: rgba(91, 108, 255, 0.065);
+            --shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+        }
+        html {
+            background: var(--bg);
+            color-scheme: light;
+        }
+        body {
+            color: var(--text);
+            background:
+                radial-gradient(900px 430px at 50% -190px, rgba(91, 108, 255, 0.12), transparent 70%),
+                radial-gradient(800px 420px at 100% 18%, rgba(39, 131, 255, 0.055), transparent 72%),
+                var(--bg);
+        }
+        ::selection {
+            color: #101828;
+            background: rgba(91, 108, 255, 0.22);
+        }
+        h1.title,
+        h2.section-title,
+        .table-title,
+        .visualization-container h3,
+        .comparison-heading h3,
+        .comparison-panel-header {
+            color: var(--text);
+        }
+        a { color: var(--text-soft); }
+        a:hover { color: var(--accent-strong); }
+        header { border-bottom-color: var(--line); }
+        .author-name { color: var(--text-soft); }
+        .author-links a,
+        .affiliation,
+        #teaser p,
+        .viewer-label,
+        .comparison-control-label,
+        .comparison-modality-badge,
+        .comparison-status-row,
+        .table-caption,
+        footer { color: var(--muted) !important; }
+        p, blockquote { color: var(--text-soft); }
+        .highlight { color: var(--text); }
+        blockquote {
+            background: rgba(91, 108, 255, 0.055);
+            border-left-color: var(--accent);
+        }
+
+        .btn {
+            color: var(--text-soft);
+            background: rgba(255, 255, 255, 0.88);
+            border-color: var(--line);
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .btn::after {
+            color: var(--accent-strong);
+            background: rgba(91, 108, 255, 0.10);
+        }
+        .btn:hover {
+            color: #ffffff;
+            background: #111827;
+            border-color: #111827;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+        }
+        .btn:hover::after {
+            color: #ffffff;
+            background: rgba(255,255,255,0.16);
+        }
+
+        .teaser-image img,
+        .table-wrapper,
+        .visualization-container,
+        .comparison-container {
+            background: var(--panel);
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+        }
+        .visualization-container,
+        .comparison-container {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,253,0.98));
+        }
+        .visualization,
+        #three-container,
+        .comparison-viewport,
+        #video-frame,
+        .comparison-video,
+        .comparison-ply-view {
+            background: #f6f8fb;
+            border-color: var(--line);
+        }
+        #message,
+        .comparison-message {
+            color: var(--muted);
+            background: rgba(247, 249, 252, 0.94);
+        }
+
+        .sample-card .sample-img {
+            border-color: rgba(15, 23, 42, 0.10);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+            filter: saturate(0.98) contrast(1.01);
+        }
+        .sample-card .sample-img.selected {
+            border-color: rgba(79, 97, 239, 0.78);
+            box-shadow: 0 0 0 3px rgba(91, 108, 255, 0.12), 0 18px 42px rgba(15, 23, 42, 0.14);
+        }
+        .sample-card.is-left,
+        .sample-card.is-right,
+        .sample-card.is-far { opacity: 0.72; }
+
+        .controls-bar,
+        .comparison-toolbar,
+        .comparison-controls {
+            background: rgba(248, 250, 253, 0.96);
+            border-color: var(--line);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 8px 24px rgba(15,23,42,0.045);
+        }
+        .ctrl-btn,
+        .compare-icon-btn {
+            color: #475467;
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.10);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255,255,255,0.95);
+        }
+        .ctrl-btn:hover,
+        .compare-icon-btn:hover {
+            color: var(--accent-strong);
+            background: #f7f8ff;
+            border-color: rgba(91, 108, 255, 0.32);
+            box-shadow: 0 7px 18px rgba(91, 108, 255, 0.10);
+        }
+        .ctrl-btn.active,
+        .compare-icon-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #3448d6, #6275ff 60%, #2783ff);
+            border-color: rgba(52, 72, 214, 0.72);
+            box-shadow: 0 10px 26px rgba(75, 94, 232, 0.22), inset 0 1px 0 rgba(255,255,255,0.28);
+        }
+        .frame-info,
+        .comparison-time-info,
+        .speed-group,
+        .point-size-group,
+        .comparison-options label {
+            color: #344054;
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.09);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.045), inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .speed-group span,
+        .point-size-group span,
+        .comparison-options output { color: var(--accent-strong); }
+        input[type='range'] { background: #d9deea; }
+        input[type='range']::-webkit-slider-thumb {
+            background: #ffffff;
+            border-color: var(--accent-hot);
+            box-shadow: 0 3px 12px rgba(60, 75, 190, 0.20);
+        }
+        input[type='range']::-moz-range-thumb {
+            background: #ffffff;
+            border-color: var(--accent-hot);
+        }
+
+        .comparison-toolbar {
+            background: rgba(246, 248, 252, 0.94);
+            border-color: var(--line);
+        }
+        .comparison-control-group {
+            background: #ffffff;
+            border-color: rgba(15, 23, 42, 0.09);
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.035);
+        }
+        .comparison-control-label { color: #98a2b3 !important; }
+        .compare-toggle-btn {
+            color: #667085;
+            background: transparent;
+        }
+        .compare-toggle-btn:hover {
+            color: #344054;
+            background: #f2f4f7;
+            border-color: rgba(15, 23, 42, 0.08);
+        }
+        .compare-toggle-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #3d50d8, #6477ff);
+            border-color: rgba(61, 80, 216, 0.65);
+            box-shadow: 0 7px 18px rgba(75, 94, 232, 0.18), inset 0 1px 0 rgba(255,255,255,0.20);
+        }
+        .compare-toggle-btn.active::after {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+        }
+        .comparison-panel {
+            background: #ffffff;
+            border-color: var(--line);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045);
+        }
+        .comparison-panel.ours-panel {
+            border-color: rgba(91, 108, 255, 0.35);
+        }
+        .comparison-panel-header {
+            background: #f8fafc;
+            border-bottom-color: var(--line);
+        }
+        .comparison-panel.ours-panel .comparison-panel-header {
+            background: rgba(91, 108, 255, 0.055);
+        }
+        .ours-badge {
+            color: var(--accent-strong);
+            background: rgba(91, 108, 255, 0.10);
+            border-color: rgba(91, 108, 255, 0.18);
+        }
+        .comparison-status-row {
+            background: #fbfcfe;
+            border-top-color: var(--line);
+        }
+
+        .table-wrapper {
+            background: rgba(255, 255, 255, 0.96);
+            border-color: rgba(15, 23, 42, 0.10);
+            box-shadow: 0 16px 45px rgba(15, 23, 42, 0.055);
+        }
+        .exp-table { color: #475467; }
+        .exp-table th,
+        .exp-table td {
+            border-bottom-color: rgba(15, 23, 42, 0.075);
+        }
+        .exp-table th {
+            color: #101828;
+            background: #f2f4f7;
+        }
+        .exp-table .sub-header th { background: #f8fafc; }
+        .exp-table td:first-child {
+            color: #1d2939;
+        }
+        .exp-table b,
+        .exp-table strong {
+            color: #101828;
+            text-shadow: none;
+        }
+        .exp-table u {
+            color: #2437b8;
+            text-decoration-color: #5b6cff;
+        }
+        .highlight-row td {
+            color: #1d2939;
+            background: rgba(91, 108, 255, 0.085) !important;
+            border-top-color: rgba(91, 108, 255, 0.18);
+            border-bottom-color: rgba(91, 108, 255, 0.18);
+        }
+        .highlight-row td:first-child {
+            color: #1d2939;
+            box-shadow: inset 3px 0 0 var(--accent-hot);
+        }
+        .highlight-row b,
+        .highlight-row strong {
+            color: #101828;
+            text-shadow: none;
+        }
+        .method-divider td {
+            border-top: 1px dashed rgba(15, 23, 42, 0.22);
+        }
+        .tracking-table-wrapper { margin-top: 2.5rem; }
+        .tracking-table .model-column { min-width: 150px; }
+
+        /* A subtle blue light frame replaces the dark-theme glow. */
+        .exp-table tbody tr:hover td {
+            color: #101828;
+            background-color: inherit;
+            box-shadow:
+                inset 0 1px 0 rgba(91, 108, 255, 0.55),
+                inset 0 -1px 0 rgba(91, 108, 255, 0.55),
+                0 0 15px rgba(91, 108, 255, 0.08);
+        }
+        .exp-table tbody tr:hover td:first-child {
+            box-shadow:
+                inset 1px 0 0 rgba(91, 108, 255, 0.55),
+                inset 0 1px 0 rgba(91, 108, 255, 0.55),
+                inset 0 -1px 0 rgba(91, 108, 255, 0.55),
+                0 0 16px rgba(91, 108, 255, 0.10);
+        }
+        .exp-table tbody tr:hover td:last-child {
+            box-shadow:
+                inset -1px 0 0 rgba(91, 108, 255, 0.55),
+                inset 0 1px 0 rgba(91, 108, 255, 0.55),
+                inset 0 -1px 0 rgba(91, 108, 255, 0.55),
+                0 0 16px rgba(91, 108, 255, 0.10);
+        }
+        .exp-table tbody .highlight-row:hover td {
+            background: rgba(91, 108, 255, 0.085) !important;
+        }
+        .exp-table tbody .highlight-row:hover td:first-child {
+            box-shadow:
+                inset 3px 0 0 var(--accent-hot),
+                inset 0 1px 0 rgba(91, 108, 255, 0.62),
+                inset 0 -1px 0 rgba(91, 108, 255, 0.62);
+        }
+
+        .math-symbol { color: #101828; }
+        .motion-base-caption { color: #475467; }
+        .viz-item {
+            background: #ffffff;
+            border-color: var(--line);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.055);
+        }
+        .citation pre {
+            color: #344054;
+            background: #ffffff;
+            border-color: var(--line);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.045);
+        }
+        footer { border-top-color: var(--line); }
+
+
+
+        /* ===== v10 targeted refinements: performance-friendly flat viewports and clearer grouping ===== */
+        .visualization,
+        #video-frame,
+        #message,
+        #three-container,
+        .comparison-viewport,
+        .comparison-video,
+        .comparison-ply-view {
+            border-radius: 0 !important;
+        }
+
+        .comparison-control-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 8px 0 5px;
+            color: #315fd1 !important;
+            font-weight: 700;
+            letter-spacing: 0.055em;
+        }
+        .comparison-control-label::after {
+            content: '';
+            width: 2px;
+            height: 14px;
+            flex: 0 0 2px;
+            border-radius: 1px;
+            background: linear-gradient(180deg, #315fd1, #7ba8ff);
+            box-shadow: 0 0 8px rgba(49, 95, 209, 0.18);
+        }
+
+        .motion-base-caption {
+            color: #315fd1 !important;
+            font-weight: 600;
+        }
+
+        /* Dataset groups: use restrained blue families and clear vertical boundaries. */
+        .exp-table thead tr:first-child th[colspan] {
+            color: #244fb8;
+            background: #edf3ff;
+            box-shadow: inset 3px 0 0 rgba(49, 95, 209, 0.56);
+        }
+        .exp-table .sub-header th {
+            color: #315284;
+        }
+
+        .depth-table thead tr:first-child th:nth-child(2),
+        .depth-table .sub-header th:nth-child(2),
+        .depth-table .sub-header th:nth-child(3) { background: #eef5ff; }
+        .depth-table thead tr:first-child th:nth-child(3),
+        .depth-table .sub-header th:nth-child(4),
+        .depth-table .sub-header th:nth-child(5) { background: #eef9fb; }
+        .depth-table thead tr:first-child th:nth-child(4),
+        .depth-table .sub-header th:nth-child(6),
+        .depth-table .sub-header th:nth-child(7) { background: #f2f1ff; }
+        .depth-table tbody td:nth-child(2),
+        .depth-table tbody td:nth-child(4),
+        .depth-table tbody td:nth-child(6) { border-left: 1px solid rgba(49, 95, 209, 0.16); }
+
+        .reconstruction-table thead tr:first-child th:nth-child(2),
+        .reconstruction-table .sub-header th:nth-child(2),
+        .reconstruction-table .sub-header th:nth-child(3) { background: #eef5ff; }
+        .reconstruction-table thead tr:first-child th:nth-child(3),
+        .reconstruction-table .sub-header th:nth-child(4),
+        .reconstruction-table .sub-header th:nth-child(5) { background: #eef9fb; }
+        .reconstruction-table thead tr:first-child th:nth-child(4),
+        .reconstruction-table .sub-header th:nth-child(6),
+        .reconstruction-table .sub-header th:nth-child(7) { background: #f2f1ff; }
+        .reconstruction-table tbody td:nth-child(2),
+        .reconstruction-table tbody td:nth-child(4),
+        .reconstruction-table tbody td:nth-child(6) { border-left: 1px solid rgba(49, 95, 209, 0.16); }
+
+        .tracking-table thead tr:first-child th:nth-child(2),
+        .tracking-table .sub-header th:nth-child(1),
+        .tracking-table .sub-header th:nth-child(2) { background: #eef5ff; }
+        .tracking-table thead tr:first-child th:nth-child(3),
+        .tracking-table .sub-header th:nth-child(3),
+        .tracking-table .sub-header th:nth-child(4) { background: #eef9fb; }
+        .tracking-table thead tr:first-child th:nth-child(4),
+        .tracking-table .sub-header th:nth-child(5),
+        .tracking-table .sub-header th:nth-child(6) { background: #f2f1ff; }
+        .tracking-table thead tr:first-child th:nth-child(5),
+        .tracking-table .sub-header th:nth-child(7),
+        .tracking-table .sub-header th:nth-child(8) { background: #f0f7ff; }
+        .tracking-table tbody td:nth-child(2),
+        .tracking-table tbody td:nth-child(4),
+        .tracking-table tbody td:nth-child(6),
+        .tracking-table tbody td:nth-child(8) { border-left: 1px solid rgba(49, 95, 209, 0.16); }
+
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Header -->
+    <header>
+        <h1 class="title">SM4RT: Learning Structured Motion Geometry for 4D Reconstruction</h1>
+        <div class="authors">
+            <div class="author-item"><span class="author-name">Shing Ho J. Lin*</span>
+                <div class="author-links"><a href="mailto:linch25@mails.tsinghua.edu.cn"><i class="fas fa-envelope"></i></a><a href="https://shjlin.github.io/"><i class="fas fa-globe"></i></a></div>
+            </div>
+            <div class="author-item"><span class="author-name">Wenzhao Zheng<sup>*, &dagger;</sup></span>
+                <div class="author-links"><a href="mailto:wzzheng@berkeley.edu"><i class="fas fa-envelope"></i></a><a href="https://wzzheng.net/"><i class="fas fa-globe"></i></a></div>
+            </div>
+            <div class="author-item"><span class="author-name">Dong Zhuo*</span>
+                <div class="author-links"><a href="https://github.com/paryi555/"><i class="fab fa-github"></i></a><a href="https://scholar.google.com/citations?user=0OakHQ0AAAAJ&hl=en"><i class="fas fa-graduation-cap"></i></a></div>
+            </div>
+            <div class="author-item"><span class="author-name">Yuqi Wu</span>
+                <div class="author-links"><a href="https://ykiwu.github.io/"><i class="fas fa-globe"></i></a></div>
+            </div>
+            <div class="author-break"></div>
+            <div class="author-item"><span class="author-name">Jie Zhou</span>
+                <div class="author-links"><a href="https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en"><i class="fas fa-graduation-cap"></i></a></div>
+            </div>
+            <div class="author-item"><span class="author-name">Jiwen Lu</span>
+                <div class="author-links"><a href="mailto:lujiwen@tsinghua.edu.cn"><i class="fas fa-envelope"></i></a><a href="http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/"><i class="fas fa-globe"></i></a></div>
+            </div>
+        </div>
+        <div class="affiliation">Intelligent Vision Group, Tsinghua University</div>
+        <div class="is-size-6 publication-authors" style="margin-top: 1px;">
+              <span class="author-block"><sup>*</sup>Equal Contributions</span>&nbsp;&nbsp;
+              <span class="author-block"><sup>&dagger;</sup>Project Leader</span>&nbsp;&nbsp;
+              <!-- <span class="author-block"><sup>✉</sup>Corresponding Author</span> -->
+            </div>
+        <div class="links-bar">
+            <a href="https://arxiv.org" class="btn"><i class="fas fa-file-pdf"></i> Paper (arXiv)</a>
+            <a href="https://github.com/wzzheng/SM4RT" class="btn"><i class="fab fa-github"></i> Code</a>
+        </div>
+    </header>
+
+    <!-- ========= Our method: video and point cloud ========= -->
+    <div class="visualization-container">
+        <div  class="comparison-heading">
+            <!-- <h3 style="margin:0; font-family:'Lato',sans-serif;">Our Method Visualization</h3> -->
+            <h3>Visualization of Our Method</h3>
+            <h4>(Point Clouds are Downsampled 4 Times for Efficiency)</h4>
+        </div>
+
+        <div class="sample-selector">
+            <div class="samples-row" id="samples-row"></div>
+        </div>
+        <div class="viewer-grid">
+            <div class="viewer-panel">
+                <div class="viewer-label">SM4RT Video</div>
+                <div class="visualization">
+                    <div id="message">Loading video...</div>
+                    <video id="video-frame" muted playsinline autoplay loop preload="auto"></video>
+                </div>
+            </div>
+
+            <div class="viewer-panel">
+                <div class="viewer-label">SM4RT Synchronized 3D Point Cloud</div>
+                <div id="three-container">
+                    <div class="info-badge"><span>🎬</span><span class="badge-path" id="badge-path">swing/frame_*.ply</span><span class="badge-total">📁 <span id="total-frames-display">0</span> frames</span></div>
+                    <div class="status-toast" id="status-msg"></div>
+                    <div class="hint-tip"></div>
+                </div>
+            </div>
+        </div>
+        <div class="controls-bar">
+            <div class="controls-left">
+                <button class="ctrl-btn" id="prev-btn" aria-label="Previous frame"><i class="fa-solid fa-backward-step" aria-hidden="true"></i></button>
+                <button class="ctrl-btn" id="play-btn" aria-label="Play or pause"><i class="fa-solid fa-play" aria-hidden="true"></i></button>
+                <button class="ctrl-btn" id="next-btn" aria-label="Next frame"><i class="fa-solid fa-forward-step" aria-hidden="true"></i></button>
+                <span class="frame-info" id="frame-info">0 / 0</span>
+            </div>
+            <div class="controls-center"><input type="range" id="frame-slider" min="0" max="0" value="0" step="1" /></div>
+            <div class="controls-right">
+                <div class="speed-group"><span>Speed</span><input type="range" id="speed-slider" min="1" max="30" value="10" step="1" /><span id="speed-value">1.0x</span></div>
+                <div class="point-size-group"><span>Point Size</span><input type="range" id="point-size-slider" min="0.005" max="0.5" step="0.005" value="0.02" /><span id="point-size-value">0.02</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========= Our method versus other methods ========= -->
+    <div class="comparison-container" id="method-comparison">
+        <div class="comparison-heading">
+            <h3>Method Comparison</h3>
+            <h4>(Point Clouds are Downsampled 4 Times for Efficiency)</h4>
+        </div>
+
+        <div class="comparison-toolbar">
+            <div class="comparison-control-group" id="compare-scene-group">
+                <span class="comparison-control-label">Scene</span>
+                <button class="compare-toggle-btn" data-compare-scene="train">Train</button>
+                <button class="compare-toggle-btn active" data-compare-scene="swing">Swing</button>
+                <button class="compare-toggle-btn" data-compare-scene="bear">Bear</button>
+                <button class="compare-toggle-btn" data-compare-scene="car">Car</button>
+                <button class="compare-toggle-btn" data-compare-scene="scooter">Scooter</button>
+            </div>
+            <div class="comparison-control-group" id="compare-modality-group">
+                <span class="comparison-control-label">Modality</span>
+                <button class="compare-toggle-btn active" data-compare-modality="video">Video</button>
+                <button class="compare-toggle-btn" data-compare-modality="pointcloud">Point Cloud</button>
+            </div>
+            <div class="comparison-control-group" id="compare-method-group">
+                <span class="comparison-control-label">Baseline</span>
+                <button class="compare-toggle-btn active" data-compare-method="4RC">4RC</button>
+                <button class="compare-toggle-btn" data-compare-method="V-DPM">V-DPM</button>
+            </div>
+        </div>
+
+        <div class="comparison-stage">
+            <div class="comparison-panel ours-panel">
+                <div class="comparison-panel-header">
+                    <span>SM4RT <span class="ours-badge">Ours</span></span>
+                    <span class="comparison-modality-badge" id="compare-left-modality-label">Video</span>
+                </div>
+                <div class="comparison-viewport" id="compare-left-viewport">
+                    <div class="comparison-message" id="compare-left-message">Loading SM4RT...</div>
+                    <video class="comparison-video" id="compare-left-video" muted playsinline autoplay loop preload="auto"></video>
+                    <div class="comparison-ply-view" id="compare-left-ply"></div>
+                </div>
+                <div class="comparison-status-row">
+                    <span id="compare-left-path">swing</span>
+                    <span id="compare-left-status">Preparing...</span>
+                </div>
+            </div>
+
+            <div class="comparison-panel">
+                <div class="comparison-panel-header">
+                    <span id="compare-baseline-label">4RC</span>
+                    <span class="comparison-modality-badge" id="compare-right-modality-label">Video</span>
+                </div>
+                <div class="comparison-viewport" id="compare-right-viewport">
+                    <div class="comparison-message" id="compare-right-message">Loading 4RC...</div>
+                    <video class="comparison-video" id="compare-right-video" muted playsinline autoplay loop preload="auto"></video>
+                    <div class="comparison-ply-view" id="compare-right-ply"></div>
+                </div>
+                <div class="comparison-status-row">
+                    <span id="compare-right-path">swing_4rc</span>
+                    <span id="compare-right-status">Preparing...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-controls">
+            <div class="comparison-play-group">
+                <button class="compare-icon-btn active" id="compare-play-btn" aria-label="Play or pause comparison"><i class="fa-solid fa-pause" aria-hidden="true"></i></button>
+                <span class="comparison-time-info" id="compare-time-info">1 / 24</span>
+            </div>
+            <input type="range" id="compare-time-slider" min="0" max="1000" value="0" step="1" aria-label="Comparison timeline" />
+            <div class="comparison-options">
+                <label>Speed <input type="range" id="compare-speed-slider" min="5" max="20" value="10" step="1" /><output id="compare-speed-output">1.0x</output></label>
+                <label>Point Size <input type="range" id="compare-point-size-slider" min="0.005" max="0.08" value="0.02" step="0.005" /><output id="compare-point-size-output">0.02</output></label>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Intro -->
+    <section>
+
+        
+        <h2 class="section-title">Overview: From Geometry-with-Motion to Geometry-of-Motion</h2>
+
+        <div class="teaser-image"><img src="./Teaser.png" alt="SM4RT teaser" /></div>
+        <p style="text-align:center; font-size:0.9rem; color:#4a607a;"><strong>Figure 1:</strong> SM4RT decomposes scene motion into structured latent bases.</p>
+
+        <p>Recent advances in Geometry Foundation Models (GFMs) have demonstrated remarkable capability in reconstructing 3D scene geometry from monocular video. With static geometry reconstruction now approaching practical fidelity, the next frontier is <strong>4D dynamic understanding</strong> which jointly infers scene structure and the underlying motion.</p>
+        <p>We propose <span class="highlight">SM4RT</span>, a <strong>S</strong>tructured <strong>M</strong>otion <strong>4</strong>D <strong>R</strong>econstruction <strong>T</strong>ransformer framework. Rather than predicting independent point-wise displacements, SM4RT introduces <em>Structure-of-Motion (SoM)</em>: scene motion is composed of a compact set of <span class="math-symbol">N</span> latent motion bases, each represented as a temporal sequence of 6D <span class="math-symbol">se(3)</span> transforms.</p>
+        <!-- <blockquote><strong>Motivation:</strong> Humans perceive motion via sparse kinematic cues—points move collectively, not in isolation. SM4RT enforces global motion coherence, preserves topological integrity, and yields a physically interpretable representation.</blockquote> -->
+        <blockquote><strong>Motivation1:</strong> Humans perceive motion via sparse kinematic cues—not at the pixel level, but at the level of objects and parts. Real-world objects usually obey rigid-body kinematics: points move collectively, not in isolation. </blockquote>
+        <blockquote><strong>Motivation2:</strong> Motion exhibits geometric structure as fiber bundle, formalizing scene dynamics as a principal bundle whose local sections correspond to valid rigid-body motions, ensuring that point-wise displacements respect the underlying topological and kinematic constraints. </blockquote>
+    
+        <div class="teaser-image"><img src="./Comparison.png" alt="comparison" style="max-width: 50%; height: auto; display: block; margin: 0 auto;" /></div>
+        <p style="text-align:center; font-size:0.9rem; color:#4a607a;"><strong>Figure 2:</strong> Comparison of motion representations. The proposed representation preserves the structure of object motion, providing a more structured description than standard per-pixel displacement and encouraging intra-object homogeneity.</p>
+
+    </section>
+
+    <!-- Architecture -->
+    <section>
+        <h2 class="section-title">Overall Framework of SM4RT</h2>
+        <div class="teaser-image"><img src="./SM4RT.png" alt="SM4RT Architecture" /></div>
+        <p style="text-align:center; font-size:0.9rem; color:#4a607a;"><strong>Figure 3:</strong> Architecture of SM4RT.</p>
+        <p>Given a monocular input video, SM4RT extracts latent geometry tokens with a DINOv2 backbone, then decouples them into scene geometry and motion geometry tokens. The scene decoder predicts camera parameters and depth, while the motion decoder estimates sparse <span class="math-symbol">se(3)</span> transforms and motion base weights for dense <span class="math-symbol">SE(3)</span> projection.</p>
+    </section>
+
+    <!-- Experimental results -->
+    <section>
+        <h2 class="section-title">Quantitative Results</h2>
+        <div class="table-wrapper">
+            <h3 class="table-title">Table 1: Video Depth Estimation</h3>
+            <p class="table-caption">AbsRel (&#8595;) and <span class="math-symbol">&#948;<sub>&lt;1.25</sub></span> (&#8593;).</p>
+            <table class="exp-table depth-table">
+                <thead><tr><th>Method</th><th colspan="2">Bonn</th><th colspan="2">Sintel</th><th colspan="2">KITTI</th></tr>
+                <tr class="sub-header"><th></th><th>AbsRel</th><th><span class="math-symbol">&#948;</span></th><th>AbsRel</th><th><span class="math-symbol">&#948;</span></th><th>AbsRel</th><th><span class="math-symbol">&#948;</span></th></tr></thead>
+                <tbody>
+                    <tr><td>MonST3R</td><td>0.072</td><td>95.48</td><td>0.309</td><td>54.23</td><td>0.095</td><td>91.59</td></tr>
+                    <tr><td>DepthAnythingV3</td><td><b>0.046</b></td><td><u>97.38</u></td><td><u>0.186</u></td><td><u>70.66</u></td><td><u>0.052</u></td><td><b>97.35</b></td></tr>
+                    <tr class="highlight-row"><td><b>SM4RT (Ours)</b></td><td>0.054</td><td><b>97.49</b></td><td><b>0.169</b></td><td><b>75.51</b></td><td>0.056</td><td><u>97.20</u></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-wrapper">
+            <h3 class="table-title">Table 2: 3D Reconstruction (Pose/Rec.)</h3>
+            <table class="exp-table reconstruction-table">
+                <thead><tr><th>Model</th><th colspan="2">HiRoom</th><th colspan="2">ETH3D</th><th colspan="2">DTU</th></tr>
+                <tr class="sub-header"><th></th><th>Pose</th><th>Rec.</th><th>Pose</th><th>Rec.</th><th>Pose</th><th>Rec.</th></tr></thead>
+                <tbody>
+                    <tr><td>Pi3</td><td>66.88/94.78</td><td>67.68</td><td>35.30/87.30</td><td>71.61</td><td>62.54/94.82</td><td>3.388</td></tr>
+                    <tr><td>4RC</td><td><u>85.53</u>/<u>98.13</u></td><td><u>86.53</u></td><td>37.79/89.97</td><td>71.97</td><td>92.07/99.20</td><td><u>1.380</u></td></tr>
+                    <tr class="highlight-row"><td><b>SM4RT (Ours)</b></td><td><b>86.16</b>/<b>98.36</b></td><td><b>89.89</b></td><td><u>43.88</u>/<b>91.56</b></td><td><u>74.86</u></td><td><b>93.30</b>/<b>99.32</b></td><td><b>1.153</b></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-wrapper tracking-table-wrapper">
+            <h3 class="table-title">Table 3: World-Coordinate Tracking</h3>
+            <p class="table-caption">Average Percent of Points within Delta (APD) and End-Point Error (EPE), reported as All / Dynamic. Predictions are aligned using Global Alignment over 64 frames.</p>
+            <table class="exp-table tracking-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="model-column">Model</th>
+                        <th colspan="2">ADT</th>
+                        <th colspan="2">DS</th>
+                        <th colspan="2">PO</th>
+                        <th colspan="2">PStudio</th>
+                    </tr>
+                    <tr class="sub-header">
+                        <th>APD</th><th>EPE</th>
+                        <th>APD</th><th>EPE</th>
+                        <th>APD</th><th>EPE</th>
+                        <th>APD</th><th>EPE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MonST3R</td>
+                        <td>74.35 / 67.92</td><td>0.2721 / 0.1578</td>
+                        <td>58.06 / 51.86</td><td>0.4387 / 0.5313</td>
+                        <td>33.47 / 39.36</td><td>0.9021 / 0.6452</td>
+                        <td>51.32 / 51.32</td><td>0.4568 / 0.4568</td>
+                    </tr>
+                    <tr>
+                        <td>SpatialTracker</td>
+                        <td>45.65 / 67.65</td><td>0.8530 / 0.1628</td>
+                        <td>54.85 / 58.65</td><td>0.9274 / 1.0828</td>
+                        <td>38.54 / 51.20</td><td>0.7499 / 0.4695</td>
+                        <td>62.59 / 62.59</td><td>0.3094 / 0.3094</td>
+                    </tr>
+                    <tr>
+                        <td>St4RTrack</td>
+                        <td>76.00 / <u>75.34</u></td><td>0.2680 / <u>0.1212</u></td>
+                        <td>73.74 / 68.13</td><td>0.2682 / 0.2961</td>
+                        <td>67.94 / 68.71</td><td>0.3140 / 0.2970</td>
+                        <td>69.67 / 69.67</td><td>0.2637 / 0.2637</td>
+                    </tr>
+                    <tr>
+                        <td>TraceAnything</td>
+                        <td>76.08 / 73.05</td><td>0.2469 / 0.1268</td>
+                        <td>60.66 / 61.23</td><td>0.5756 / 0.4422</td>
+                        <td>39.84 / 47.39</td><td>1.0595 / 0.7224</td>
+                        <td>71.32 / 71.32</td><td>0.2727 / 0.2727</td>
+                    </tr>
+                    <tr>
+                        <td>Any4D</td>
+                        <td>58.65 / 70.66</td><td>0.4048 / 0.1313</td>
+                        <td>79.08 / 68.81</td><td>0.2203 / 0.3112</td>
+                        <td>66.20 / 66.55</td><td>0.3741 / 0.3991</td>
+                        <td>64.44 / 64.44</td><td>0.2977 / 0.2977</td>
+                    </tr>
+                    <tr class="method-divider">
+                        <td>VDPM</td>
+                        <td><u>85.96</u> / 72.10</td><td><u>0.1666</u> / 0.1359</td>
+                        <td>74.27 / <b>77.66</b></td><td>0.2548 / <b>0.2123</b></td>
+                        <td><u>81.10</u> / <b>82.39</b></td><td><b>0.1907</b> / <b>0.1708</b></td>
+                        <td><u>78.73</u> / <u>78.73</u></td><td>0.1812 / 0.1812</td>
+                    </tr>
+                    <tr>
+                        <td>4RC</td>
+                        <td>83.22 / 72.27</td><td>0.1905 / 0.1422</td>
+                        <td><u>82.17</u> / 73.92</td><td><u>0.1946</u> / <u>0.2747</u></td>
+                        <td>79.35 / <u>75.94</u></td><td>0.2762 / 0.3517</td>
+                        <td>70.91 / 70.91</td><td>0.2443 / 0.2433</td>
+                    </tr>
+                    <tr>
+                        <td>(Open)D4RT</td>
+                        <td>72.20 / 73.25</td><td>0.2758 / 0.3199</td>
+                        <td>72.48 / <u>74.88</u></td><td>0.2959 / 0.2755</td>
+                        <td>67.99 / 74.25</td><td>0.3178 / <u>0.2593</u></td>
+                        <td><b>79.60</b> / <b>79.60</b></td><td><b>0.1753</b> / <b>0.1753</b></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><b>SM4RT (Ours)</b></td>
+                        <td><b>88.56</b> / <b>80.68</b></td><td><b>0.1339</b> / <b>0.0935</b></td>
+                        <td><b>82.61</b> / 71.62</td><td><b>0.1918</b> / 0.2912</td>
+                        <td><b>81.62</b> / 73.68</td><td><u>0.2578</u> / 0.3808</td>
+                        <td>78.69 / 78.69</td><td><u>0.1790</u> / <u>0.1790</u></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Visualization: motion bases -->
+    <section>
+        <h2 class="section-title">More Visualizations</h2>
+        <h3 style="margin-bottom:0">Motion Base Visualization</h3>
+        <p class="motion-base-caption">Check whether regions with similar colors share similar kinematics.</p>
+        <div class="viz-grid">
+            <div class="viz-item"><img src="assets/base/car-turn_00048.gif" alt="gif1" /></div>
+            <div class="viz-item"><img src="assets/base/soapbox_00072.gif" alt="gif2" /></div>
+            <div class="viz-item"><img src="assets/base/stroller_00048.gif" alt="gif3" /></div>
+            <div class="viz-item"><img src="assets/base/goat_00000.gif" alt="gif4" /></div>
+            <div class="viz-item"><img src="assets/base/longboard_00000.gif" alt="gif5" /></div>
+            <div class="viz-item"><img src="assets/base/flamingo_00000.gif" alt="gif6" /></div>
+            <div class="viz-item"><img src="assets/base/car-turn_00048.png" alt="png1" /></div>
+            <div class="viz-item"><img src="assets/base/soapbox_00072.png" alt="png2" /></div>
+            <div class="viz-item"><img src="assets/base/stroller_00048.png" alt="png3" /></div>
+            <div class="viz-item"><img src="assets/base/goat_00000.png" alt="png4" /></div>
+            <div class="viz-item"><img src="assets/base/longboard_00000.png" alt="png5" /></div>
+            <div class="viz-item"><img src="assets/base/flamingo_00000.png" alt="png6" /></div>
+        </div>
+
+
+        <h3 class="section-title">More Comparisons</h3>
+        <div class="teaser-image"><img src="./Trackline.png" alt="SM4RT Architecture" /></div>
+        <p style="text-align:center; font-size:0.9rem; color:#4a607a;"><strong>Figure 3:</strong> Static Comparison of Tracklines. Our method obtains more structured motion compared with others, especially in background staticness.</p>
+
+    </section>
+
+    <!-- Citation -->
+    <div class="citation">
+        <h2>Citation</h2>
+        <pre><code>@article{sm4rt,
+  title={SM4RT: Learning Structured Motion Geometry for 4D Reconstruction},
+  author={Lin, Shing Ho J. and Zheng, Wenzhao and Zhuo, Dong and Wu, Yuqi and Zhou, Jie and Lu, Jiwen},
+  journal={arXiv preprint: arXiv 2607.},
+  year={2026}
+}</code></pre>
+    </div>
+    <footer><p>&copy; 2026 Intelligent Vision Group, Tsinghua University.</p></footer>
+</div>
+
+<!-- ==================== Main script: our video and sample cards ==================== -->
+<script>
+    (function(){
+        const SAMPLES = ['train', 'swing', 'bear', 'car', 'scooter'];
+        let currentSample = 'swing';
+
+        const videoEl = document.getElementById('video-frame');
+        const messageEl = document.getElementById('message');
+        const samplesRow = document.getElementById('samples-row');
+
+        function updateSelectedCard() {
+            const cards = Array.from(samplesRow.querySelectorAll('.sample-card'));
+            const total = SAMPLES.length;
+            const selectedIndex = SAMPLES.indexOf(currentSample);
+
+            cards.forEach(card => {
+                const sample = card.dataset.sample;
+                const cardIndex = SAMPLES.indexOf(sample);
+                const img = card.querySelector('.sample-img');
+                const rawOffset = (cardIndex - selectedIndex + total) % total;
+
+                card.classList.remove('is-selected', 'is-left', 'is-right', 'is-far');
+                if (img) img.classList.remove('selected');
+
+                if (rawOffset === total - 1) {
+                    card.style.order = 0;
+                    card.classList.add('is-left');
+                } else if (rawOffset === 0) {
+                    card.style.order = 1;
+                    card.classList.add('is-selected');
+                    if (img) img.classList.add('selected');
+                } else if (rawOffset === 1) {
+                    card.style.order = 2;
+                    card.classList.add('is-right');
+                } else {
+                    card.style.order = 3;
+                    card.classList.add('is-far');
+                }
+            });
+        }
+
+        function buildSampleCards() {
+            samplesRow.innerHTML = '';
+            SAMPLES.forEach(sample => {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'sample-card';
+                card.dataset.sample = sample;
+                card.setAttribute('aria-label', `Select ${sample}`);
+
+                const img = document.createElement('img');
+                img.className = 'sample-img';
+                img.src = `assets/track/${sample}.gif`;
+                img.dataset.sample = sample;
+                img.alt = sample;
+
+                card.addEventListener('click', () => selectSample(sample));
+                card.appendChild(img);
+                samplesRow.appendChild(card);
+            });
+            updateSelectedCard();
+        }
+
+        function loadVideoForSample(sample) {
+            const videoUrl = `assets/track/${sample}.mp4`;
+            messageEl.style.display = 'flex';
+            messageEl.textContent = 'Loading SM4RT video...';
+            videoEl.pause();
+            videoEl.removeAttribute('src');
+            videoEl.load();
+
+            videoEl.src = videoUrl;
+            videoEl.muted = true;
+            videoEl.loop = true;
+            videoEl.autoplay = true;
+            videoEl.preload = 'auto';
+            videoEl.playbackRate = 1.0;
+            videoEl.onloadedmetadata = function() {
+                videoEl.currentTime = 0;
+                messageEl.style.display = 'none';
+                videoEl.play().catch(() => {});
+            };
+            videoEl.onerror = function() {
+                messageEl.style.display = 'flex';
+                messageEl.textContent = `⚠️ Unable to load SM4RT video: ${sample}`;
+                console.warn('Video loading failed', videoUrl);
+            };
+        }
+
+        function triggerPLYReload(sample) {
+            window.pendingPLYSelection = { sample, subType: 'SM4RT' };
+            if (window.reloadPLY) window.reloadPLY(sample, 'SM4RT');
+        }
+
+        function selectSample(sample) {
+            currentSample = sample;
+            updateSelectedCard();
+            loadVideoForSample(sample);
+            triggerPLYReload(sample);
+        }
+
+        buildSampleCards();
+        selectSample(currentSample);
+    })();
+</script>
+
+<!-- ====== 3D point-cloud module ====== -->
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+    const FRAME_COUNT = 24;
+    const METHOD_SUFFIX = { 'SM4RT': '', '4RC': '_4rc', 'V-DPM': '_vdpm' };
+    const MAX_PLY_CONCURRENCY = 4;
+    const MAX_RENDER_PIXEL_RATIO = 1.5;
+    const geometrySequenceCache = new Map();
+
+    const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+
+    function buildFramePaths(sampleName, methodName) {
+        const suffix = METHOD_SUFFIX[methodName] || '';
+        const prefix = `./assets/pointcloud/${sampleName}${suffix}/frame_`;
+        return Array.from({ length: FRAME_COUNT }, (_, index) => {
+            const frame = String(index).padStart(4, '0');
+            return `${prefix}${frame}.ply`;
+        });
+    }
+
+    function processGeometry(geometry) {
+        const position = geometry.attributes.position;
+        const count = position ? position.count : 0;
+        if (!position || count === 0) return geometry;
+
+        const array = position.array;
+        let cx = 0, cy = 0, cz = 0;
+        for (let i = 0; i < array.length; i += 3) {
+            cx += array[i];
+            cy += array[i + 1];
+            cz += array[i + 2];
+        }
+        cx /= count;
+        cy /= count;
+        cz /= count;
+        for (let i = 0; i < array.length; i += 3) {
+            array[i] -= cx;
+            array[i + 1] -= cy;
+            array[i + 2] -= cz;
+        }
+        position.needsUpdate = true;
+
+        geometry.computeBoundingBox();
+        if (geometry.boundingBox) {
+            const size = new THREE.Vector3();
+            geometry.boundingBox.getSize(size);
+            const maxDimension = Math.max(size.x, size.y, size.z);
+            if (maxDimension > 0.001) {
+                const scale = 2.5 / maxDimension;
+                for (let i = 0; i < array.length; i++) array[i] *= scale;
+                position.needsUpdate = true;
+            }
+        }
+
+        if (!geometry.attributes.color) {
+            const colors = new Float32Array(count * 3);
+            let minY = Infinity;
+            let maxY = -Infinity;
+            for (let i = 0; i < count; i++) {
+                const y = position.getY(i);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+            const range = maxY - minY || 1;
+            for (let i = 0; i < count; i++) {
+                const t = (position.getY(i) - minY) / range;
+                colors[i * 3] = 0.2 + 0.8 * t;
+                colors[i * 3 + 1] = 0.3 + 0.7 * Math.sin(t * Math.PI);
+                colors[i * 3 + 2] = 0.8 + 0.2 * (1 - t);
+            }
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        }
+        return geometry;
+    }
+
+    async function loadGeometrySequenceUncached(paths) {
+        const loader = new PLYLoader();
+        const results = new Array(paths.length);
+        let cursor = 0;
+
+        async function worker() {
+            while (true) {
+                const index = cursor++;
+                if (index >= paths.length) return;
+                const path = paths[index];
+                try {
+                    const response = await fetch(path);
+                    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+                    const buffer = await response.arrayBuffer();
+                    const geometry = loader.parse(buffer);
+                    results[index] = geometry?.attributes?.position?.count > 0
+                        ? processGeometry(geometry)
+                        : null;
+                } catch (error) {
+                    console.warn('PLY frame load failed:', path, error);
+                    results[index] = null;
+                }
+                // Parsing PLY is main-thread work. Yield between frames so video/UI stays responsive.
+                await yieldToBrowser();
+            }
+        }
+
+        const workerCount = Math.min(MAX_PLY_CONCURRENCY, Math.max(1, paths.length));
+        await Promise.all(Array.from({ length: workerCount }, worker));
+
+        let loaded = 0;
+        const geometries = results.map(geometry => {
+            if (geometry?.attributes?.position?.count > 0) {
+                loaded += 1;
+                geometry.userData.sharedSequenceGeometry = true;
+                return geometry;
+            }
+            const empty = new THREE.BufferGeometry();
+            empty.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3));
+            empty.userData.sharedSequenceGeometry = true;
+            return empty;
+        });
+        return { geometries, loaded };
+    }
+
+    async function loadGeometrySequence(paths, tokenGuard) {
+        const cacheKey = paths.join('|');
+        let promise = geometrySequenceCache.get(cacheKey);
+        if (!promise) {
+            promise = loadGeometrySequenceUncached(paths);
+            geometrySequenceCache.set(cacheKey, promise);
+            promise.catch(() => geometrySequenceCache.delete(cacheKey));
+        }
+        const result = await promise;
+        if (tokenGuard && !tokenGuard()) return null;
+        return result;
+    }
+
+    class PLYSequenceLoader {
+        constructor(container, statusEl, totalDisplay, badgeEl) {
+            this.container = container;
+            this.statusEl = statusEl;
+            this.totalDisplay = totalDisplay;
+            this.badgeEl = badgeEl;
+            this.frameGeometries = [];
+            this.currentFrame = 0;
+            this.isPlaying = false;
+            this.animationTimer = null;
+            this.frameInterval = 100;
+            this.currentPointCloud = null;
+            this.pointSize = 0.02;
+            this.loadToken = 0;
+            this.videoEl = document.getElementById('video-frame');
+
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0xf6f8fb);
+            this.camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+            this.camera.position.set(0, 0.08, -2.0);
+            this.camera.lookAt(0, 0.0, 0);
+
+            this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_RENDER_PIXEL_RATIO));
+            this.renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(this.renderer.domElement);
+
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.08;
+            this.controls.rotateSpeed = 0.9;
+            this.controls.target.set(0, 0.0, 0);
+            this.controls.update();
+
+            this.scene.add(new THREE.AmbientLight(0x9aaec9, 0.6));
+            const directional = new THREE.DirectionalLight(0xffffff, 0.9);
+            directional.position.set(1, 3, 2);
+            this.scene.add(directional);
+            const grid = new THREE.GridHelper(4.5, 20, 0xaeb8c8, 0xdde3ec);
+            grid.position.y = -0.5;
+            this.scene.add(grid);
+
+            this.pointGroup = new THREE.Group();
+            this.scene.add(this.pointGroup);
+            this.emptyGeometry = new THREE.BufferGeometry();
+            this.emptyGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3));
+            this.pointMaterial = new THREE.PointsMaterial({
+                size: this.pointSize,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.92,
+                sizeAttenuation: true,
+            });
+            this.currentPointCloud = new THREE.Points(this.emptyGeometry, this.pointMaterial);
+            this.currentPointCloud.visible = false;
+            this.pointGroup.add(this.currentPointCloud);
+            this.isVisible = true;
+            this.visibilityObserver = new IntersectionObserver(entries => {
+                this.isVisible = entries[0]?.isIntersecting ?? true;
+            }, { rootMargin: '160px' });
+            this.visibilityObserver.observe(this.container);
+
+            this.frameSlider = document.getElementById('frame-slider');
+            this.frameInfo = document.getElementById('frame-info');
+            this.playBtn = document.getElementById('play-btn');
+            this.prevBtn = document.getElementById('prev-btn');
+            this.nextBtn = document.getElementById('next-btn');
+            this.speedSlider = document.getElementById('speed-slider');
+            this.speedValue = document.getElementById('speed-value');
+            this.sizeSlider = document.getElementById('point-size-slider');
+            this.sizeValueDisplay = document.getElementById('point-size-value');
+
+            this.bindEvents();
+            this.animate();
+        }
+
+        async updatePaths(paths, displayName) {
+            this.stopPlayback();
+            this.camera.position.set(0, 0.08, -2.0);
+            this.camera.up.set(0, 1, 0);
+            this.camera.zoom = 1;
+            this.controls.target.set(0, 0.0, 0);
+            this.camera.lookAt(this.controls.target);
+            this.camera.updateProjectionMatrix();
+            this.controls.update();
+            const token = ++this.loadToken;
+            this.disposeGeometries();
+            this.clearPointCloud();
+            this.frameSlider.max = 0;
+            this.frameSlider.value = 0;
+            this.frameInfo.textContent = '0 / 0';
+            if (this.badgeEl) this.badgeEl.textContent = displayName || 'frame_*.ply';
+            this.statusEl.textContent = '⏳ Loading PLY sequence...';
+            this.statusEl.style.color = '#2a4a6a';
+
+            const result = await loadGeometrySequence(paths, () => token === this.loadToken);
+            if (!result) return;
+            this.frameGeometries = result.geometries;
+            this.totalDisplay.textContent = result.loaded;
+            this.frameSlider.max = Math.max(0, this.frameGeometries.length - 1);
+
+            if (this.frameGeometries.length > 0) {
+                this.statusEl.textContent = `✅ Loaded (${result.loaded}/${this.frameGeometries.length} frames)`;
+                this.statusEl.style.color = '#1e6b3b';
+                this.displayFrame(0);
+                this.startPlayback();
+            } else {
+                this.statusEl.textContent = '❌ No valid frames';
+                this.statusEl.style.color = '#b13e3e';
+            }
+        }
+
+        displayFrame(index) {
+            if (index < 0 || index >= this.frameGeometries.length) return;
+            const geometry = this.frameGeometries[index];
+            const hasPoints = Boolean(geometry?.attributes?.position?.count > 0);
+            this.currentPointCloud.geometry = hasPoints ? geometry : this.emptyGeometry;
+            this.currentPointCloud.material.vertexColors = Boolean(geometry?.attributes?.color);
+            this.currentPointCloud.material.size = this.pointSize;
+            this.currentPointCloud.visible = hasPoints;
+            this.currentFrame = index;
+            this.frameSlider.value = index;
+            this.frameInfo.textContent = `${index + 1} / ${this.frameGeometries.length}`;
+        }
+
+        clearPointCloud() {
+            if (!this.currentPointCloud) return;
+            this.currentPointCloud.geometry = this.emptyGeometry;
+            this.currentPointCloud.visible = false;
+        }
+
+        disposeGeometries() {
+            // Loaded sequences are shared by the main and comparison viewers.
+            // They stay cached for the page lifetime to avoid duplicate fetch/parse work.
+            this.frameGeometries = [];
+        }
+
+        seekVideoToFrame(index) {
+            if (!Number.isFinite(this.videoEl.duration) || this.videoEl.duration <= 0) return;
+            this.videoEl.currentTime = (index / Math.max(this.frameGeometries.length, 1)) * this.videoEl.duration;
+        }
+
+        bindEvents() {
+            this.playBtn.addEventListener('click', () => this.isPlaying ? this.stopPlayback() : this.startPlayback());
+            this.prevBtn.addEventListener('click', () => {
+                if (!this.frameGeometries.length) return;
+                this.stopPlayback();
+                const index = (this.currentFrame - 1 + this.frameGeometries.length) % this.frameGeometries.length;
+                this.displayFrame(index);
+                this.seekVideoToFrame(index);
+            });
+            this.nextBtn.addEventListener('click', () => {
+                if (!this.frameGeometries.length) return;
+                this.stopPlayback();
+                const index = (this.currentFrame + 1) % this.frameGeometries.length;
+                this.displayFrame(index);
+                this.seekVideoToFrame(index);
+            });
+            this.frameSlider.addEventListener('input', event => {
+                this.stopPlayback();
+                const index = Number(event.target.value);
+                this.displayFrame(index);
+                this.seekVideoToFrame(index);
+            });
+            this.speedSlider.addEventListener('input', () => {
+                const multiplier = Number(this.speedSlider.value) / 10;
+                this.speedValue.textContent = `${multiplier.toFixed(1)}x`;
+                this.videoEl.playbackRate = multiplier;
+            });
+            this.sizeSlider.addEventListener('input', () => {
+                this.pointSize = Number(this.sizeSlider.value);
+                this.sizeValueDisplay.textContent = this.pointSize.toFixed(2);
+                if (this.currentPointCloud) this.currentPointCloud.material.size = this.pointSize;
+            });
+            window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+            const width = this.container.clientWidth;
+            const height = this.container.clientHeight;
+            if (!width || !height) return;
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(width, height);
+        }
+
+        startPlayback() {
+            if (this.frameGeometries.length < 2) return;
+            this.isPlaying = true;
+            this.playBtn.innerHTML = '<i class="fa-solid fa-pause" aria-hidden="true"></i>';
+            this.playBtn.classList.add('active');
+            this.videoEl.loop = true;
+            this.videoEl.play().catch(() => {});
+        }
+
+        stopPlayback() {
+            this.isPlaying = false;
+            this.playBtn.innerHTML = '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+            this.playBtn.classList.remove('active');
+            this.videoEl.pause();
+            if (this.animationTimer) {
+                clearInterval(this.animationTimer);
+                this.animationTimer = null;
+            }
+        }
+
+        animate() {
+            requestAnimationFrame(() => this.animate());
+            if (!this.isVisible || document.visibilityState !== 'visible') return;
+            if (
+                this.isPlaying &&
+                !this.videoEl.paused &&
+                Number.isFinite(this.videoEl.duration) &&
+                this.videoEl.duration > 0 &&
+                this.frameGeometries.length > 1
+            ) {
+                const progress = (this.videoEl.currentTime % this.videoEl.duration) / this.videoEl.duration;
+                const index = Math.min(this.frameGeometries.length - 1, Math.floor(progress * this.frameGeometries.length));
+                if (index !== this.currentFrame) this.displayFrame(index);
+            }
+            this.controls.update();
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
+
+    class ComparisonPointCloudViewport {
+        constructor(container, onInteraction) {
+            this.container = container;
+            this.onInteraction = onInteraction;
+            this.frameGeometries = [];
+            this.currentFrame = -1;
+            this.currentPointCloud = null;
+            this.pointSize = 0.02;
+            this.loadToken = 0;
+
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0xf6f8fb);
+            this.camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 1000);
+            this.camera.position.set(0, 0.08, -2.0);
+            this.camera.lookAt(0, 0.0, 0);
+
+            this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_RENDER_PIXEL_RATIO));
+            container.appendChild(this.renderer.domElement);
+
+            this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.08;
+            this.controls.rotateSpeed = 0.9;
+            this.controls.target.set(0, 0.0, 0);
+            this.controls.update();
+            this.resetInitialView();
+            this.controls.addEventListener('start', () => this.onInteraction?.(this));
+            this.renderer.domElement.addEventListener('pointerdown', () => this.onInteraction?.(this));
+            this.renderer.domElement.addEventListener('wheel', () => this.onInteraction?.(this), { passive: true });
+
+            this.scene.add(new THREE.AmbientLight(0x9aaec9, 0.6));
+            const directional = new THREE.DirectionalLight(0xffffff, 0.9);
+            directional.position.set(1, 3, 2);
+            this.scene.add(directional);
+            const grid = new THREE.GridHelper(4.5, 20, 0xaeb8c8, 0xdde3ec);
+            grid.position.y = -0.5;
+            this.scene.add(grid);
+            this.pointGroup = new THREE.Group();
+            this.scene.add(this.pointGroup);
+            this.emptyGeometry = new THREE.BufferGeometry();
+            this.emptyGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3));
+            this.pointMaterial = new THREE.PointsMaterial({
+                size: this.pointSize,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.92,
+                sizeAttenuation: true,
+            });
+            this.currentPointCloud = new THREE.Points(this.emptyGeometry, this.pointMaterial);
+            this.currentPointCloud.visible = false;
+            this.pointGroup.add(this.currentPointCloud);
+            this.isVisible = true;
+            this.visibilityObserver = new IntersectionObserver(entries => {
+                this.isVisible = entries[0]?.isIntersecting ?? true;
+            }, { rootMargin: '160px' });
+            this.visibilityObserver.observe(this.container);
+            this.resize();
+        }
+
+        resetInitialView() {
+            this.camera.position.set(0, 0.08, -2.0);
+            this.camera.up.set(0, 1, 0);
+            this.camera.zoom = 1;
+            this.controls.target.set(0, 0.0, 0);
+            this.camera.lookAt(this.controls.target);
+            this.camera.updateProjectionMatrix();
+            this.controls.update();
+        }
+
+        async load(paths, statusCallback) {
+            const token = ++this.loadToken;
+            this.disposeGeometries();
+            this.clearPointCloud();
+            this.currentFrame = -1;
+            statusCallback?.('loading', 0, paths.length);
+
+            const result = await loadGeometrySequence(paths, () => token === this.loadToken);
+            if (!result) return false;
+            this.frameGeometries = result.geometries;
+            statusCallback?.('ready', result.loaded, this.frameGeometries.length);
+            if (this.frameGeometries.length) this.displayFrame(0);
+            return true;
+        }
+
+        displayFrame(index) {
+            if (index < 0 || index >= this.frameGeometries.length || index === this.currentFrame) return;
+            const geometry = this.frameGeometries[index];
+            const hasPoints = Boolean(geometry?.attributes?.position?.count > 0);
+            this.currentPointCloud.geometry = hasPoints ? geometry : this.emptyGeometry;
+            this.currentPointCloud.material.vertexColors = Boolean(geometry?.attributes?.color);
+            this.currentPointCloud.material.size = this.pointSize;
+            this.currentPointCloud.visible = hasPoints;
+            this.currentFrame = index;
+        }
+
+        setProgress(progress) {
+            if (!this.frameGeometries.length) return;
+            const normalized = ((progress % 1) + 1) % 1;
+            const index = Math.min(this.frameGeometries.length - 1, Math.floor(normalized * this.frameGeometries.length));
+            this.displayFrame(index);
+        }
+
+        setPointSize(size) {
+            this.pointSize = size;
+            this.pointMaterial.size = size;
+        }
+
+        copyViewFrom(source) {
+            this.camera.position.copy(source.camera.position);
+            this.camera.quaternion.copy(source.camera.quaternion);
+            this.camera.zoom = source.camera.zoom;
+            this.camera.up.copy(source.camera.up);
+            this.camera.updateProjectionMatrix();
+            this.controls.target.copy(source.controls.target);
+            this.controls.update();
+        }
+
+        clearPointCloud() {
+            if (!this.currentPointCloud) return;
+            this.currentPointCloud.geometry = this.emptyGeometry;
+            this.currentPointCloud.visible = false;
+        }
+
+        disposeGeometries() {
+            this.frameGeometries = [];
+        }
+
+        resize() {
+            const width = this.container.clientWidth;
+            const height = this.container.clientHeight;
+            if (!width || !height) return;
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(width, height);
+        }
+
+        updateAndRender() {
+            if (!this.isVisible || document.visibilityState !== 'visible') return;
+            this.controls.update();
+            this.renderer.render(this.scene, this.camera);
+        }
+    }
+
+    class MethodComparisonController {
+        constructor() {
+            this.sample = 'swing';
+            this.baseline = '4RC';
+            this.modality = 'video';
+            this.isPlaying = true;
+            this.playbackRate = 1;
+            this.progress = 0;
+            this.lastTick = performance.now();
+            this.loadToken = 0;
+            this.activeViewport = null;
+            this.fallbackDuration = FRAME_COUNT / 10;
+            this.cloudSelectionKey = '';
+            this.cloudLoadPromise = null;
+            this.lastResumeAttempt = 0;
+
+            this.leftVideo = document.getElementById('compare-left-video');
+            this.rightVideo = document.getElementById('compare-right-video');
+            this.leftViewportEl = document.getElementById('compare-left-viewport');
+            this.rightViewportEl = document.getElementById('compare-right-viewport');
+            this.leftMessage = document.getElementById('compare-left-message');
+            this.rightMessage = document.getElementById('compare-right-message');
+            this.leftStatus = document.getElementById('compare-left-status');
+            this.rightStatus = document.getElementById('compare-right-status');
+            this.leftPath = document.getElementById('compare-left-path');
+            this.rightPath = document.getElementById('compare-right-path');
+            this.baselineLabel = document.getElementById('compare-baseline-label');
+            this.leftModalityLabel = document.getElementById('compare-left-modality-label');
+            this.rightModalityLabel = document.getElementById('compare-right-modality-label');
+            this.playBtn = document.getElementById('compare-play-btn');
+            this.timeSlider = document.getElementById('compare-time-slider');
+            this.timeInfo = document.getElementById('compare-time-info');
+            this.speedSlider = document.getElementById('compare-speed-slider');
+            this.speedOutput = document.getElementById('compare-speed-output');
+            this.pointSizeSlider = document.getElementById('compare-point-size-slider');
+            this.pointSizeOutput = document.getElementById('compare-point-size-output');
+
+            this.leftCloud = new ComparisonPointCloudViewport(
+                document.getElementById('compare-left-ply'),
+                viewport => this.activeViewport = viewport,
+            );
+            this.rightCloud = new ComparisonPointCloudViewport(
+                document.getElementById('compare-right-ply'),
+                viewport => this.activeViewport = viewport,
+            );
+            this.activeViewport = this.leftCloud;
+            this.rightCloud.copyViewFrom(this.leftCloud);
+
+            this.configureVideo(this.leftVideo);
+            this.configureVideo(this.rightVideo);
+            this.bindEvents();
+            this.setModality('video');
+            this.loadSelection(true);
+            this.animate();
+        }
+
+        configureVideo(video) {
+            video.muted = true;
+            video.loop = true;
+            video.autoplay = true;
+            video.playsInline = true;
+            video.preload = 'auto';
+            video.playbackRate = this.playbackRate;
+        }
+
+        bindEvents() {
+            document.querySelectorAll('[data-compare-scene]').forEach(button => {
+                button.addEventListener('click', () => {
+                    this.sample = button.dataset.compareScene;
+                    this.setActiveButton('[data-compare-scene]', button);
+                    this.loadSelection(true);
+                });
+            });
+            document.querySelectorAll('[data-compare-method]').forEach(button => {
+                button.addEventListener('click', () => {
+                    this.baseline = button.dataset.compareMethod;
+                    this.setActiveButton('[data-compare-method]', button);
+                    this.loadSelection(true);
+                });
+            });
+            document.querySelectorAll('[data-compare-modality]').forEach(button => {
+                button.addEventListener('click', () => {
+                    this.setActiveButton('[data-compare-modality]', button);
+                    this.setModality(button.dataset.compareModality);
+                });
+            });
+
+            this.playBtn.addEventListener('click', () => this.setPlaying(!this.isPlaying));
+            this.timeSlider.addEventListener('input', () => {
+                this.progress = Number(this.timeSlider.value) / Number(this.timeSlider.max);
+                this.seekVideos(this.progress);
+                this.updateFrames();
+            });
+            this.speedSlider.addEventListener('input', () => {
+                this.playbackRate = Number(this.speedSlider.value) / 10;
+                this.speedOutput.value = `${this.playbackRate.toFixed(1)}x`;
+                this.leftVideo.playbackRate = this.playbackRate;
+                this.rightVideo.playbackRate = this.playbackRate;
+            });
+            this.pointSizeSlider.addEventListener('input', () => {
+                const size = Number(this.pointSizeSlider.value);
+                this.pointSizeOutput.value = size.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+                this.leftCloud.setPointSize(size);
+                this.rightCloud.setPointSize(size);
+            });
+            window.addEventListener('resize', () => {
+                this.leftCloud.resize();
+                this.rightCloud.resize();
+            });
+        }
+
+        setActiveButton(selector, activeButton) {
+            document.querySelectorAll(selector).forEach(button => button.classList.toggle('active', button === activeButton));
+        }
+
+        setModality(modality) {
+            this.modality = modality;
+            const pointCloudMode = modality === 'pointcloud';
+            this.leftViewportEl.classList.toggle('pointcloud-mode', pointCloudMode);
+            this.rightViewportEl.classList.toggle('pointcloud-mode', pointCloudMode);
+            const label = pointCloudMode ? 'Point Cloud' : 'Video';
+            this.leftModalityLabel.textContent = label;
+            this.rightModalityLabel.textContent = label;
+            if (pointCloudMode) {
+                this.ensurePointCloudSelection(this.loadToken).then(() => {
+                    requestAnimationFrame(() => {
+                        this.leftCloud.resize();
+                        this.rightCloud.resize();
+                        this.rightCloud.copyViewFrom(this.leftCloud);
+                        this.updateFrames(true);
+                    });
+                });
+            }
+        }
+
+        showMessage(element, text) {
+            element.textContent = text;
+            element.classList.remove('hidden');
+        }
+
+        hideMessage(element) {
+            element.classList.add('hidden');
+        }
+
+        setVideoSource(video, url, messageEl, methodName, token) {
+            this.showMessage(messageEl, `Loading ${methodName}...`);
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            video.src = url;
+            video.playbackRate = this.playbackRate;
+
+            video.onloadedmetadata = () => {
+                if (token !== this.loadToken) return;
+                video.currentTime = 0;
+                this.hideMessage(messageEl);
+                if (this.isPlaying) video.play().catch(() => {});
+            };
+            video.onerror = () => {
+                if (token !== this.loadToken) return;
+                this.showMessage(messageEl, `⚠️ Unable to load ${methodName} video`);
+            };
+        }
+
+        async ensurePointCloudSelection(expectedToken = this.loadToken) {
+            const selectionKey = `${this.sample}|${this.baseline}`;
+            if (
+                this.cloudSelectionKey === selectionKey &&
+                this.leftCloud.frameGeometries.length &&
+                this.rightCloud.frameGeometries.length
+            ) return true;
+            if (this.cloudLoadPromise?.key === selectionKey) return this.cloudLoadPromise.promise;
+
+            const baselineSuffix = METHOD_SUFFIX[this.baseline];
+            this.leftStatus.textContent = 'Loading PLY...';
+            this.rightStatus.textContent = 'Loading PLY...';
+
+            const promise = Promise.all([
+                this.leftCloud.load(
+                    buildFramePaths(this.sample, 'SM4RT'),
+                    (state, loaded, total) => {
+                        if (expectedToken !== this.loadToken) return;
+                        this.leftStatus.textContent = state === 'ready' ? `PLY ${loaded}/${total}` : 'Loading PLY...';
+                    },
+                ),
+                this.rightCloud.load(
+                    buildFramePaths(this.sample, this.baseline),
+                    (state, loaded, total) => {
+                        if (expectedToken !== this.loadToken) return;
+                        this.rightStatus.textContent = state === 'ready' ? `PLY ${loaded}/${total}` : 'Loading PLY...';
+                    },
+                ),
+            ]).then(() => {
+                if (expectedToken !== this.loadToken) return false;
+                this.cloudSelectionKey = selectionKey;
+                this.leftCloud.resetInitialView();
+                this.rightCloud.copyViewFrom(this.leftCloud);
+                this.activeViewport = this.leftCloud;
+                return true;
+            }).finally(() => {
+                if (this.cloudLoadPromise?.key === selectionKey) this.cloudLoadPromise = null;
+            });
+
+            this.cloudLoadPromise = { key: selectionKey, promise };
+            return promise;
+        }
+
+        async loadSelection(resetTime) {
+            const token = ++this.loadToken;
+            const baselineSuffix = METHOD_SUFFIX[this.baseline];
+            this.cloudSelectionKey = '';
+            this.baselineLabel.textContent = this.baseline;
+            this.leftPath.textContent = `${this.sample}`;
+            this.rightPath.textContent = `${this.sample}${baselineSuffix}`;
+
+            if (resetTime) {
+                this.progress = 0;
+                this.timeSlider.value = 0;
+            }
+
+            this.setVideoSource(
+                this.leftVideo,
+                `assets/track/${this.sample}.mp4`,
+                this.leftMessage,
+                'SM4RT',
+                token,
+            );
+            this.setVideoSource(
+                this.rightVideo,
+                `assets/track/${this.sample}${baselineSuffix}.mp4`,
+                this.rightMessage,
+                this.baseline,
+                token,
+            );
+
+            if (this.modality === 'pointcloud') {
+                await this.ensurePointCloudSelection(token);
+                if (token !== this.loadToken) return;
+            } else {
+                this.leftStatus.textContent = 'Point cloud loads on demand';
+                this.rightStatus.textContent = 'Point cloud loads on demand';
+            }
+
+            this.seekVideos(this.progress);
+            this.updateFrames(this.modality === 'pointcloud');
+            this.setPlaying(true);
+        }
+
+        setPlaying(playing) {
+            this.isPlaying = playing;
+            this.playBtn.innerHTML = playing ? '<i class="fa-solid fa-pause" aria-hidden="true"></i>' : '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+            this.playBtn.classList.toggle('active', playing);
+            if (playing) {
+                this.leftVideo.play().catch(() => {});
+                this.rightVideo.play().catch(() => {});
+            } else {
+                this.leftVideo.pause();
+                this.rightVideo.pause();
+            }
+            this.lastTick = performance.now();
+        }
+
+        seekVideos(progress) {
+            const normalized = ((progress % 1) + 1) % 1;
+            if (Number.isFinite(this.leftVideo.duration) && this.leftVideo.duration > 0) {
+                this.leftVideo.currentTime = normalized * this.leftVideo.duration;
+            }
+            if (Number.isFinite(this.rightVideo.duration) && this.rightVideo.duration > 0) {
+                this.rightVideo.currentTime = normalized * this.rightVideo.duration;
+            }
+        }
+
+        updateProgress(now) {
+            const elapsed = Math.max(0, now - this.lastTick) / 1000;
+            this.lastTick = now;
+            if (!this.isPlaying) return;
+
+            if (Number.isFinite(this.leftVideo.duration) && this.leftVideo.duration > 0 && !this.leftVideo.paused) {
+                this.progress = (this.leftVideo.currentTime % this.leftVideo.duration) / this.leftVideo.duration;
+            } else {
+                this.progress = (this.progress + elapsed * this.playbackRate / this.fallbackDuration) % 1;
+            }
+
+            this.leftVideo.playbackRate = this.playbackRate;
+            if (Number.isFinite(this.rightVideo.duration) && this.rightVideo.duration > 0) {
+                const target = this.progress * this.rightVideo.duration;
+                const signedDrift = target - this.rightVideo.currentTime;
+                const drift = Math.abs(signedDrift);
+                if (drift > 0.22) {
+                    this.rightVideo.currentTime = target;
+                    this.rightVideo.playbackRate = this.playbackRate;
+                } else {
+                    const correction = Math.max(-0.04, Math.min(0.04, signedDrift * 0.16));
+                    this.rightVideo.playbackRate = Math.max(0.1, this.playbackRate * (1 + correction));
+                }
+            }
+
+            // Avoid issuing play() promises every animation frame while a video is buffering.
+            if (now - this.lastResumeAttempt > 900) {
+                this.lastResumeAttempt = now;
+                if (this.leftVideo.paused && this.leftVideo.readyState >= 2) this.leftVideo.play().catch(() => {});
+                if (this.rightVideo.paused && this.rightVideo.readyState >= 2) this.rightVideo.play().catch(() => {});
+            }
+        }
+
+        updateFrames(updateClouds = true) {
+            if (updateClouds) {
+                this.leftCloud.setProgress(this.progress);
+                this.rightCloud.setProgress(this.progress);
+            }
+            this.timeSlider.value = Math.round(this.progress * Number(this.timeSlider.max));
+            const total = Math.max(
+                this.leftCloud.frameGeometries.length,
+                this.rightCloud.frameGeometries.length,
+                FRAME_COUNT,
+            );
+            const frame = Math.min(total, Math.floor(this.progress * total) + 1);
+            this.timeInfo.textContent = `${frame} / ${total}`;
+        }
+
+        synchronizeCamera() {
+            if (this.activeViewport === this.rightCloud) {
+                this.leftCloud.copyViewFrom(this.rightCloud);
+            } else {
+                this.rightCloud.copyViewFrom(this.leftCloud);
+            }
+        }
+
+        animate(now = performance.now()) {
+            requestAnimationFrame(timestamp => this.animate(timestamp));
+            this.updateProgress(now);
+            const pointCloudMode = this.modality === 'pointcloud';
+            this.updateFrames(pointCloudMode);
+            if (pointCloudMode && document.visibilityState === 'visible') {
+                this.synchronizeCamera();
+                this.leftCloud.updateAndRender();
+                this.rightCloud.updateAndRender();
+            }
+        }
+    }
+
+    const mainContainer = document.getElementById('three-container');
+    const mainLoader = new PLYSequenceLoader(
+        mainContainer,
+        document.getElementById('status-msg'),
+        document.getElementById('total-frames-display'),
+        document.getElementById('badge-path'),
+    );
+
+    window.reloadPLY = function(sampleName) {
+        const paths = buildFramePaths(sampleName, 'SM4RT');
+        mainLoader.updatePaths(paths, `${sampleName}/frame_*.ply`);
+    };
+
+    const initialSelection = window.pendingPLYSelection || { sample: 'swing' };
+    window.reloadPLY(initialSelection.sample);
+
+    new MethodComparisonController();
+    console.log('SM4RT synchronized visualization and comparison modules started.');
+</script>
+</body>
+</html>
