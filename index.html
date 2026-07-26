@@ -284,7 +284,8 @@
         }
         .sample-card .sample-img {
             width: 100%;
-            aspect-ratio: 16 / 9;
+            /* aspect-ratio: 16 / 9; */
+            height: auto;
             border-radius: 22px;
             cursor: pointer;
             object-fit: cover;
@@ -2285,7 +2286,7 @@
 
         <h3 class="section-title">More Comparisons</h3>
         <div class="teaser-image"><img src="./Trackline.png" alt="SM4RT Architecture" /></div>
-        <p style="text-align:center; font-size:0.9rem; color:#4a607a;"><strong>Figure 3:</strong> Static Comparison of Tracklines. Our method obtains more structured motion compared with others, especially in background staticness.</p>
+        <p style="text-align:center; font-size:0.9rem; color:#4a607a;"><strong>Figure 4:</strong> Static Comparison of Tracklines. Our method obtains more structured motion compared with others, especially in background staticness.</p>
 
     </section>
 
@@ -2304,9 +2305,9 @@
 
 <!-- ==================== Main script: our video and sample cards ==================== -->
 <script>
-    (function(){
-        const SAMPLES = ['train', 'swing', 'bear', 'car', 'scooter'];
-        let currentSample = 'swing';
+    (function(){        
+        const SAMPLES = ['robot', 'motorbike', 'carshadow', 'kubric'];
+        let currentSample = 'robot';
 
         const videoEl = document.getElementById('video-frame');
         const messageEl = document.getElementById('message');
