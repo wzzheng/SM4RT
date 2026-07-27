@@ -132,6 +132,7 @@ Configure your training setting in './config', and run:
 ## TODO
 
 - [ ] Release evaluation code.
+- [ ] Release model checkpoint (within 2 days).
 
 
 ## Citation
