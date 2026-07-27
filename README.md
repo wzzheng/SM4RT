@@ -27,7 +27,7 @@
         <a href="http://arxiv.org/abs/2607.XXXXX" target="_blank">
             <img src="https://img.shields.io/badge/arXiv-B31B1B?style=flat-square&logo=arxiv&logoColor=white"/>
         </a>
-        <a href="https://hf-mirror.com/shjlin/sm4rt/" target="_blank">
+        <a href="https://huggingface.co/shjlin/sm4rt/" target="_blank">
             <img src="https://img.shields.io/badge/🤗_HuggingFace-FFD21E?style=flat-square&logoColor=black"/>
         </a>
         <a href="https://www.modelscope.cn/models/shjlin/sm4rt/" target="_blank">
@@ -83,7 +83,7 @@
 ## 🔥 News
 - [2026/07/26] Inference code released!
 - [2026/07/26] Training code released!
-- [2026/07/27] Model checkpoint released!
+<!-- - [2026/07/27] Model checkpoint released! -->
 
 ## 🔧 Installation
 
