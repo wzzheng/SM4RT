@@ -184,7 +184,7 @@ Structure of Motion Related and Operators of Use:
 
 If you have any questions, please feel free to reach us at `linch25@mails.tsinghua.edu.cn`.
 
-## License
+## 📄 License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0).
 
