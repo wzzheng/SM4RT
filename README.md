@@ -24,7 +24,7 @@
         <a href="https://wzzheng.net/SM4RT" target="_blank">
             <img src="https://img.shields.io/badge/🌐_Website-0A0A0A?style=flat-square&logoColor=white"/>
         </a>
-        <a href="http://arxiv.org/abs/2607.XXXXX" target="_blank">
+        <a href="http://arxiv.org/abs/2607.22534" target="_blank">
             <img src="https://img.shields.io/badge/arXiv-B31B1B?style=flat-square&logo=arxiv&logoColor=white"/>
         </a>
         <a href="https://huggingface.co/shjlin/sm4rt/" target="_blank">
@@ -140,10 +140,10 @@ Configure your training setting in './config', and run:
    If you find our repo useful for your research, please consider citing our paper:
 
    ```bibtex
-  @article{luo20264rc,
+  @article{lin2026sm4rt,
       title     = {SM4RT: Learning Structured Motion Geometry for 4D Reconstruction},
-      author    = {Zheng, Wenzhao and Lin, Shing Ho J. and Zhuo, Dong and Wu, Yuqi and Zhou, Jie and Lu, Jiwen},
-      journal   = {arXiv preprint arXiv:2607.XXXXX},
+      author    = {Lin, Shing Ho J. and Zheng, Wenzhao and Zhuo, Dong and Wu, Yuqi and Zhou, Jie and Lu, Jiwen},
+      journal   = {arXiv preprint arXiv:2607.22534},
       year      = {2026}
   }
    ```
