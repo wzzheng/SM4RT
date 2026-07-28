@@ -183,3 +183,12 @@ Structure of Motion Related and Operators of Use:
 ## 📫 Contact
 
 If you have any questions, please feel free to reach us at `linch25@mails.tsinghua.edu.cn`.
+
+## License
+
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0).
+
+© 2026 IVG, Tsinghua. All rights reserved.
+
+For the full license text, see the [LICENSE](./LICENSE) file or visit:  
+https://creativecommons.org/licenses/by-nc/4.0/
