@@ -6,14 +6,14 @@
 
 <div>
     <a href='https://shjlin.github.io/'  target='_blank'>Shing Ho J. Lin*</a>&emsp;
-    <a href='https://wzzheng.net/' target='_blank'>Wenzhao Zheng*</a>&emsp;
+    <a href='https://wzzheng.net/' target='_blank'>Wenzhao Zheng*<sup>,</sup>†</a>&emsp;
     <a href="https://scholar.google.com/citations?user=0OakHQ0AAAAJ&hl=en" target='_blank'>Dong Zhuo*</a>&emsp;
     <a href="https://ykiwu.github.io/" target='_blank'>Yuqi Wu</a>
     <br>
     <a href="https://scholar.google.com/citations?user=6a79aPwAAAAJ&hl=en" target='_blank'>Jie Zhou</a>&emsp;
     <a href="http://ivg.au.tsinghua.edu.cn/Jiwen_Lu/" target='_blank'>Jiwen Lu</a>&emsp;
     <br>
-    <small>* Equal contribution</small>
+    <small>* Equal contribution &emsp; † Project Leader</small>
 </div>
 <div>
     Intelligent Vision Group, Tsinghua University&emsp; 
@@ -78,12 +78,10 @@
   </tr>
 </table>
 
-
-
 ## 🔥 News
 - [2026/07/26] Inference code released!
 - [2026/07/26] Training code released!
-<!-- - [2026/07/27] Model checkpoint released! -->
+- [2026/07/29] Model checkpoint released!
 
 ## 🔧 Installation
 
@@ -132,7 +130,6 @@ Configure your training setting in './config', and run:
 ## TODO
 
 - [ ] Release evaluation code.
-- [ ] Release model checkpoint (within 2 days).
 
 
 ## Citation
