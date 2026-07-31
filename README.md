@@ -99,8 +99,12 @@
 
 3. Install Python Dependencies
     ```bash
-    # Install dependencies
-    pip install -r requirements.txt
+    # Minimal Dependencies
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+    # Clustering Modules
+    pip install torch_geometric -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install pyg_lib torch_scatter torch_sparse torch_cluster -f https://data.pyg.org/whl/torch-2.5.0+cu124.html
     ```
 
 ## Inference
