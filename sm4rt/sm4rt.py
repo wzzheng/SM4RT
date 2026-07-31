@@ -177,7 +177,7 @@ class MotionBaseDecoder(nn.Module):
         pos = None
         if self.rope is not None:
             pos_patch = self.position_getter(B * S, H // self.patch_size, W // self.patch_size, device=device)
-            pos_motion = torch.zeros(B * S, 10, 2, device=device, dtype=pos_patch.dtype)
+            pos_motion = torch.zeros(B * S, 15, 2, device=device, dtype=pos_patch.dtype)
             pos = torch.cat([pos_motion, pos_patch], dim=1)
 
         output_list = []
