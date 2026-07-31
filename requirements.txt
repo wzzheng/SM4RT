@@ -122,7 +122,6 @@ parso==0.8.7
 partd==1.4.2
 pexpect==4.9.0
 pillow==11.3.0
-pip==26.1.2
 platformdirs==4.10.0
 portalocker==3.2.0
 prompt_toolkit==3.0.52
@@ -162,7 +161,6 @@ scipy==1.15.3
 seaborn==0.13.2
 semantic-version==2.10.0
 sentry-sdk==2.66.0
-setuptools==83.0.0
 shellingham==1.5.4
 six==1.17.0
 smmap==5.0.3
@@ -182,8 +180,8 @@ tokenizers==0.22.2
 tomlkit==0.13.3
 toolz==1.1.0
 torch==2.5.0
-torch_cluster==1.6.3+pt25cu124
 torch-geometric==2.6.1
+torch_cluster==1.6.3+pt25cu124
 torch_scatter==2.1.2+pt25cu124
 torch_sparse==0.6.18+pt25cu124
 torchaudio==2.5.0
@@ -199,8 +197,8 @@ trimesh==4.7.4
 triton==3.1.0
 typer==0.27.0
 typing==3.7.4.3
-typing_extensions==4.15.0
 typing-inspection==0.4.2
+typing_extensions==4.15.0
 tzdata==2026.3
 ucx-py-cu12==0.44.0
 ucxx-cu12==0.44.0
@@ -213,7 +211,6 @@ wcmatch==11.0
 wcwidth==0.2.13
 websockets==14.2
 Werkzeug==3.1.8
-wheel==0.47.0
 yarl==1.24.2
 zict==3.0.0
 zipp==4.1.0
