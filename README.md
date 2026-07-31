@@ -93,7 +93,7 @@
 
 2. Create Conda Environment
     ```bash
-    conda create -n sm4rt python=3.11
+    conda create -n sm4rt python=3.10
     conda activate sm4rt
     ```
 
