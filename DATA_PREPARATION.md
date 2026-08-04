@@ -10,7 +10,7 @@ Notice: Before downloading, make sure you obtain all the required licences.
 
 Please follow steps by [DELTAv2](https://github.com/snap-research/DenseTrack3Dv2) to retrieve the dataset. 
 
-We provided our preprocessed data with world tracking annotation:
+We provided our preprocessed data with world tracking annotation (To prevent excessive downloads, access to this dataset is subject to an application process, which we will approve promptly):
 
 `https://www.modelscope.cn/datasets/shjlin/kubric_world_processed`
 
