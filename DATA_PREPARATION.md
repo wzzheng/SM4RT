@@ -2,7 +2,7 @@
 
 We do not require further preprocessing. Just download and organize the directory properly, then off you go!
 
-Notice: Before downloading, make sure you obtain all the required licence.
+Notice: Before downloading, make sure you obtain all the required licences.
 
 ## Motion Datasets
 

@@ -185,6 +185,10 @@ Structure of Motion Related and Operators of Use:
 
 If you have any questions, please feel free to reach us at `linch25@mails.tsinghua.edu.cn`.
 
+## ❌ Errata
+
+In Figure 7 of the preprint, the RGB image pair in the top-right sample was inadvertently swapped. While this does not affect the interpretation, we will correct it along with the next version.
+
 ## 📄 License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License (CC BY-NC 4.0).
