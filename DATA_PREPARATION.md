@@ -1,189 +1,55 @@
-# Data Preparation
+# Dataset Preparation
 
-This document provides instructions for downloading and preparing the datasets used in this project.
+We do not require further preprocessing. Just download and organize the directory properly, then off you go!
 
-## Download Instructions
+Notice: Before downloading, make sure you obtain all the required licence.
 
-### 1. Kubric
+## Motion Datasets
 
-> **Note:** Kubric is a synthetic dataset generated using Blender. You can generate custom data via their public codebase, or download pre-generated splits.
+### [Kubric](https://github.com/google-research/kubric/)
 
-**Source:** [Hugging Face Dataset](https://huggingface.co/datasets/your-org/kubric) *(replace with actual URL)*
+Please follow steps by [DELTAv2](https://github.com/snap-research/DenseTrack3Dv2) to retrieve the dataset. 
 
-```bash
-# Install dependencies
-pip install gdown huggingface_hub
+We provided our preprocessed data with world tracking annotation:
 
-# Download from Hugging Face
-huggingface-cli download your-org/kubric \
-  --local-dir ./data/kubric \
-  --include "*.tfrecord" \
-  --exclude "*.tmp"
-```
+`https://www.modelscope.cn/datasets/shjlin/kubric_world_processed`
 
-**Expected structure:**
-```
-data/kubric/
-├── train/
-│   ├── scene_0001.tfrecord
-│   ├── scene_0002.tfrecord
-│   └── ...
-├── val/
-│   ├── scene_1001.tfrecord
-│   └── ...
-└── metadata/
-    ├── object_categories.json
-    └── split_info.json
-```
+### [Stereo4D](https://stereo4d.github.io/)
 
----
+Preprocessed by other users: 
 
-### 2. Point Odyssey
+`https://huggingface.co/datasets/ZhengGuangze/Stereo4D_vlbm`
 
-**Source:** [Hugging Face Dataset](https://huggingface.co/datasets/your-org/point-odyssey) *(replace with actual URL)*
 
-```bash
-# Download via Hugging Face
-huggingface-cli download your-org/point-odyssey \
-  --local-dir ./data/point_odyssey \
-  --include "*.hdf5" "*.mp4"
-```
+## [Dynamic Replica](https://github.com/facebookresearch/dynamic_stereo)
 
-**Expected structure:**
-```
-data/point_odyssey/
-├── train/
-│   ├── sequence_001/
-│   │   ├── frames/
-│   │   │   ├── 000000.png
-│   │   │   ├── 000001.png
-│   │   │   └── ...
-│   │   ├── tracks.hdf5
-│   │   └── metadata.json
-│   └── ...
-├── val/
-│   └── ...
-└── test/
-    └── ...
-```
+`https://huggingface.co/datasets/geyongtao/dynamic_replica/`
 
----
+## [PointOdyssey](https://pointodyssey.com/)
 
-### 3. Dynamic Replica
+`https://huggingface.co/datasets/aharley/pointodyssey/`
 
-**Source:** [Hugging Face Dataset](https://huggingface.co/datasets/your-org/dynamic-replica) *(replace with actual URL)*
+Note: Samples that does not contain 3D trajectories should be filtered: 
 
-```bash
-huggingface-cli download your-org/dynamic-replica \
-  --local-dir ./data/dynamic_replica \
-  --include "*.npz" "*.png"
-```
+samples begin with `character`; `gso_in_big`; `gso_out_big`
 
-**Expected structure:**
-```
-data/dynamic_replica/
-├── scene_001/
-│   ├── rgb/
-│   │   ├── frame_0000.png
-│   │   └── ...
-│   ├── depth/
-│   │   ├── frame_0000.png
-│   │   └── ...
-│   ├── flow/
-│   │   ├── frame_0000.npz
-│   │   └── ...
-│   └── camera/
-│       └── poses.npy
-├── scene_002/
-│   └── ...
-└── splits/
-    └── default.json
-```
+## Depth Datasets
 
----
+### [ARKitScenes](https://github.com/apple/ARKitScenes), [MVS-Synth](https://phuang17.github.io/DeepMVS/mvs-synth.html), [TartanAir](https://theairlab.org/tartanair-dataset/), [Virtual KITTI 2](https://europe.naverlabs.com/research/computer-vision/proxy-virtual-worlds-vkitti-2/)
 
-### 4. Stereo4D
+Preprocessed by other users, please replace `{DATASET}` with `ARKitScenes_preprocessed, MVS_Synth_preprocessed, TartanAir_preprocessed, 
+VKITTI2_vlbm`:
 
-**Source:** [Hugging Face Dataset](https://huggingface.co/datasets/your-org/stereo4d) *(replace with actual URL)*
+`https://huggingface.co/datasets/ZhengGuangze/{DATASET}/`
 
-```bash
-huggingface-cli download your-org/stereo4d \
-  --local-dir ./data/stereo4d \
-  --include "*.png" "*.npy"
-```
+### [HyperSim](https://github.com/apple/ml-hypersim)
 
-**Expected structure:**
-```
-data/stereo4d/
-├── train/
-│   ├── scene_000/
-│   │   ├── left/
-│   │   │   ├── 000000.png
-│   │   │   └── ...
-│   │   ├── right/
-│   │   │   ├── 000000.png
-│   │   │   └── ...
-│   │   ├── disparity/
-│   │   │   ├── 000000.npy
-│   │   │   └── ...
-│   │   └── calibration.json
-│   └── ...
-├── val/
-│   └── ...
-└── test/
-    └── ...
-```
+`https://huggingface.co/datasets/KevinConnorLee/preprocessed_Hypersim/`
 
----
+## [Scannet++](https://kaldir.vc.in.tum.de/scannetpp/)
 
-## Data Preprocessing
+`https://huggingface.co/datasets/HarrisonPENG/scannetpp/`
 
-After downloading all datasets, run the preprocessing script to unify formats:
+## [Waymo](https://github.com/waymo-research/waymo-open-dataset)
 
-```bash
-python scripts/preprocess_data.py \
-  --kubric_path ./data/kubric \
-  --point_odyssey_path ./data/point_odyssey \
-  --dynamic_replica_path ./data/dynamic_replica \
-  --stereo4d_path ./data/stereo4d \
-  --output_path ./data/processed
-```
-
----
-
-## Verification
-
-To verify all datasets are correctly downloaded:
-
-```bash
-python scripts/verify_datasets.py \
-  --datasets kubric,point_odyssey,dynamic_replica,stereo4d \
-  --data_root ./data
-```
-
-Expected output:
-```
-✓ Kubric: 12,345 scenes found
-✓ Point Odyssey: 8,760 sequences found
-✓ Dynamic Replica: 42 scenes found
-✓ Stereo4D: 15,000 stereo pairs found
-All datasets verified successfully!
-```
-
----
-
-## Notes
-
-- Total storage requirement: **~1.2 TB** (consider using symbolic links to external drives)
-- All datasets are provided under their respective licenses — please check before use.
-- For faster access, consider converting `.tfrecord` files to `.npy` or `.hdf5` formats.
-- If you encounter download issues, try using `--resume-download` flag with `huggingface-cli`.
-
----
-
-## References
-
-- Kubric: [https://github.com/google-research/kubric](https://github.com/google-research/kubric)
-- Point Odyssey: [https://pointodyssey.com/](https://pointodyssey.com/)
-- Dynamic Replica: [https://dynamic-replica.github.io/](https://dynamic-replica.github.io/)
-- Stereo4D: [https://stereo4d.github.io/](https://stereo4d.github.io/)
+`https://hf-mirror.com/datasets/Brainkite/waymo_processed/`
