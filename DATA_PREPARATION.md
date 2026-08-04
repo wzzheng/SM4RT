@@ -44,12 +44,18 @@ VKITTI2_vlbm`:
 
 ### [HyperSim](https://github.com/apple/ml-hypersim)
 
+Preprocessed by other users: 
+
 `https://huggingface.co/datasets/KevinConnorLee/preprocessed_Hypersim/`
 
 ## [Scannet++](https://kaldir.vc.in.tum.de/scannetpp/)
+
+Preprocessed by other users: 
 
 `https://huggingface.co/datasets/HarrisonPENG/scannetpp/`
 
 ## [Waymo](https://github.com/waymo-research/waymo-open-dataset)
 
-`https://hf-mirror.com/datasets/Brainkite/waymo_processed/`
+Preprocessed by other users: 
+
+`https://huggingface.co/datasets/Brainkite/waymo_processed/`
