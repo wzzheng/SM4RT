@@ -151,7 +151,7 @@ class Kubric_Motion(BaseMultiViewDataset):
             if seq_cnt > self.max_sequences:
                 break
             frame_path    = osp.join(self.ROOT, seq, "frames")
-            seg_path      = osp.join(self.ROOT, seq, "segmentations", '000.png')
+            seg_path      = osp.join(self.ROOT, seq, "static.png")
             world_pt_path = osp.join(self.ROOT, seq, f"{seq}_world_pts.pt")
             twist_path = osp.join(self.ROOT, seq, f"{seq}_twist.pt")
             frames = [osp.join(frame_path, f"{i:03d}.png") for i in range(self.num_views)]
@@ -206,11 +206,6 @@ class Kubric_Motion(BaseMultiViewDataset):
         scale = float(open(self.store[seq_name]["scale_path"]).read().strip())
         Frame, H, W, _ = world_pt_518.shape
 
-        track3d_disp_diff = world_pt_518 - world_pt_518[:1]
-        diff = track3d_disp_diff[1:] - track3d_disp_diff[:-1]
-        frame_norms = torch.linalg.norm(diff, ord=2, dim=-1)
-        norm = frame_norms.sum(dim=0)
-
         euclidean_dist = torch.norm(world_pt_518, p=2, dim=-1)
         scale_ = euclidean_dist.mean()
         world_pt_518 /= scale
@@ -222,12 +217,9 @@ class Kubric_Motion(BaseMultiViewDataset):
 
         seg_mask = torch.from_numpy(img_np).long()
         seg_mask_518 = torch.nn.functional.interpolate(seg_mask.unsqueeze(0).unsqueeze(0).float(), size=(518, 518), mode='nearest-exact', align_corners=None)[0,0].long()
-        background = (seg_mask_518 == 0) | (norm < 0.01)
+        background = (seg_mask_518 != 0)
 
         views: List[Dict[str, Any]] = []
-
-        # if 'val' not in self.ROOT:
-        #     pos = [0,2,4,6,8,10,12,14,16,18,20,22]
 
         # pos = [0,2,4,6,8,10,12,14,16,18,20,22]
         pos = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
