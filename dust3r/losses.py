@@ -133,21 +133,6 @@ class MultiTaskLoss(MultiLoss):
 
         if dataset == "KubricMotion":
 
-            mask_518 = gts[0]["seg_mask"][0]
-            all_indices = torch.unique(mask_518)
-            bkg_indices = torch.unique(mask_518[background])
-            frg_indices = all_indices[~torch.isin(all_indices, bkg_indices)]
-
-            twist_gt = torch.stack([gt["twist"][0] for gt in gts], dim=0)
-            twist_pred = torch.stack([pred["twist"][0] for pred in preds], dim=0)
-
-            se3_pred = torch.stack([pred["twist_se3"][0] for pred in preds], dim=0)
-            se3_gt = se3_exp_map(twist_gt.view(S*H*W,6)).view(S, H, W, 4, 4)
-
-
-            rot_loss = torch.tensor(0.0).to('cuda')
-            trans_loss = torch.tensor(0.0).to('cuda')
-            
             entropy_loss = torch.tensor(0.0).to('cuda')
             assign_bg = assign[background]
             entropy_loss_bg = - 0.1 * torch.sum(assign_bg * torch.log(assign_bg + 1e-8), dim=-1).mean()
@@ -157,15 +142,9 @@ class MultiTaskLoss(MultiLoss):
             pred_wp_track = torch.stack([pred["wp_track"] for pred in preds], dim=0)
             gt_track3d = torch.stack([gt["track3d_disp"] for gt in gts], dim=1)[0] + torch.stack([gt["world_pt_518"] for gt in gts], dim=1)[0][:1]
             
-
-            loss_motion = torch.tensor(0.0).to('cuda')
-            for val in frg_indices:
-                mask_val = (mask_518 == val)
-                pred_track3d_disp_fg = pred_wp_track[:, mask_val]
-                gt_track3d_disp_fg = gt_track3d[:, mask_val]
-                loss_motion += 2000 * (F.mse_loss(gt_track3d_disp_fg - gt_track3d_disp_fg[:1], pred_track3d_disp_fg - pred_track3d_disp_fg[:1]))
-            loss_motion /= len(frg_indices)
-
+            gt_track3d_disp_fg = gt_track3d[:, ~background]
+            pred_track3d_disp_fg = pred_wp_track[:, ~background]
+            loss_motion = 2000 * F.mse_loss(gt_track3d_disp_fg - gt_track3d_disp_fg[:1], pred_track3d_disp_fg - pred_track3d_disp_fg[:1])
             pred_track3d_disp_bg = pred_wp_track[:, background]
             loss_background = 2000 * F.mse_loss(pred_track3d_disp_bg-pred_track3d_disp_bg[:1], torch.zeros_like(pred_track3d_disp_bg).to('cuda'))
 
@@ -178,8 +157,6 @@ class MultiTaskLoss(MultiLoss):
 
             loss_motion = torch.tensor(0.0).to('cuda')
             loss_background = torch.tensor(0.0).to('cuda')
-            rot_loss = torch.tensor(0.0).to('cuda')
-            trans_loss = torch.tensor(0.0).to('cuda')
             loss_bg = torch.tensor(0.0).to('cuda')
             entropy_loss_fg = torch.tensor(0.0).to('cuda')
             entropy_loss_bg = torch.tensor(0.0).to('cuda')
