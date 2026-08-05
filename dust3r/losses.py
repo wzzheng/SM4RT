@@ -138,6 +138,7 @@ class MultiTaskLoss(MultiLoss):
             entropy_loss_bg = - 0.1 * torch.sum(assign_bg * torch.log(assign_bg + 1e-8), dim=-1).mean()
             assign_fg = assign[~background]
             entropy_loss_fg = - 0.1 * torch.sum(assign_fg * torch.log(assign_fg + 1e-8), dim=-1).mean()
+            entropy_loss = entropy_loss_fg + entropy_loss_bg
 
             pred_wp_track = torch.stack([pred["wp_track"] for pred in preds], dim=0)
             gt_track3d = torch.stack([gt["track3d_disp"] for gt in gts], dim=1)[0] + torch.stack([gt["world_pt_518"] for gt in gts], dim=1)[0][:1]
@@ -154,45 +155,38 @@ class MultiTaskLoss(MultiLoss):
             ) * 10
 
         else:
-
-            loss_motion = torch.tensor(0.0).to('cuda')
-            loss_background = torch.tensor(0.0).to('cuda')
-            loss_bg = torch.tensor(0.0).to('cuda')
-            entropy_loss_fg = torch.tensor(0.0).to('cuda')
-            entropy_loss_bg = torch.tensor(0.0).to('cuda')
-
-            pred_wp_track = torch.stack([pred["wp_track"] for pred in preds], dim=0)
-            gt_track3d = torch.stack([gt["track3d_disp"] for gt in gts], dim=1)[0] + torch.stack([gt["world_pt_518"] for gt in gts], dim=1)[0][:1]
             
-            pred_track3d_disp_fg = pred_wp_track[:, ~background]
-            gt_track3d_disp_fg = gt_track3d[:, ~background]
-            loss_motion += 2000 * (F.mse_loss(gt_track3d_disp_fg - gt_track3d_disp_fg[:1], pred_track3d_disp_fg - pred_track3d_disp_fg[:1]))
+            entropy = -torch.sum(assign * torch.log(assign + 1e-8), dim=-1)
+            entropy_loss = 0.2 * entropy.mean()
+            loss_background = torch.tensor(0.0).to('cuda')
 
-            pred_track3d_disp_bg = pred_wp_track[:, background]
-            loss_background = 2000 * F.mse_loss(pred_track3d_disp_bg-pred_track3d_disp_bg[:1], torch.zeros_like(pred_track3d_disp_bg).to('cuda'))
+            gt_track3d = torch.stack([gt["track3d"] for gt in gts], dim=1)[0]
+            gt_track = torch.stack([gt["track"] for gt in gts], dim=1)[0]
+            mask_in_bound = (gt_track[0][...,0] > 0) & (gt_track[0][...,0] < W) & (gt_track[0][...,1] > 0) & (gt_track[0][...,1] < H)
 
-            entropy_loss = torch.tensor(0.0).to('cuda')
-            assign_bg = assign[background]
-            entropy_bg = -torch.sum(assign_bg * torch.log(assign_bg + 1e-8), dim=-1)
-            entropy_loss_bg = 0.1 * entropy_bg.mean()
-            assign_fg = assign[~background]
-            entropy_fg = -torch.sum(assign_fg * torch.log(assign_fg + 1e-8), dim=-1)
-            entropy_loss_fg = 0.1 * entropy_fg.mean()
+            gt_track = gt_track[:,mask_in_bound]
+            gt_track3d = gt_track3d[:,mask_in_bound]
+
+            col_idx = torch.floor(gt_track[0][...,0]).long()
+            row_idx = torch.floor(gt_track[0][...,1]).long()
+
+            if len(col_idx) > 0:
+                pred_track3d_mask = pred_track3d[:,row_idx,col_idx]
+                pred_track3d_mask_disp = pred_track3d_mask - pred_track3d_mask[:1]
+                gt_track3d_disp = gt_track3d - gt_track3d[:1]
+                loss_motion = 1000 * F.mse_loss(gt_track3d_disp, pred_track3d_mask_disp)
+            else:
+                loss_motion = torch.tensor(0.0)
 
             total = (
-                loss_motion + loss_background + loss_bg 
-                + (
-                    entropy_loss_fg + entropy_loss_bg
-                )
-            )
-            
+                loss_motion + loss_background +
+                entropy_loss
+            ) * 10
 
         details = {
             "PT": float(loss_motion.detach()),
             "PTBG": float(loss_background.detach()),
-            'BG': float(loss_bg.detach()),
-            'ENT_FG': float(entropy_loss_fg.detach()),
-            'ENT_BG': float(entropy_loss_bg.detach()),
+            'ENT_FG': float(entropy_loss.detach()),
             'total': float(total.detach())
         }
 
