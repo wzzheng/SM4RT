@@ -234,10 +234,8 @@ class Kubric_Motion(BaseMultiViewDataset):
                 instance=osp.basename(img_path),
                 track3d_disp=track3d_disp[p],
                 world_pt_518=world_pt_518[p],
-                # twist=twist[p],
                 background=background,
                 seg_mask=seg_mask_518,
                 is_metric=False,
             ))
         return views
-
