@@ -27,9 +27,9 @@
         <a href="http://arxiv.org/abs/2607.22534" target="_blank">
             <img src="https://img.shields.io/badge/arXiv-B31B1B?style=flat-square&logo=arxiv&logoColor=white"/>
         </a>
-        <!-- <a href="https://huggingface.co/shjlin/sm4rt/" target="_blank">
+        <a href="https://huggingface.co/shjlin/sm4rt/" target="_blank">
             <img src="https://img.shields.io/badge/🤗_HuggingFace-FFD21E?style=flat-square&logoColor=black"/>
-        </a> -->
+        </a>
         <a href="https://www.modelscope.cn/models/shjlin/sm4rt/" target="_blank">
             <img src="https://img.shields.io/badge/ModelScope-5A2D9C?style=flat-square&logo=databricks&logoColor=white"/>
         </a>
