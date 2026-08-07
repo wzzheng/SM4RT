@@ -239,12 +239,8 @@ def main():
     intrinsic = torch.stack([output_dict['preds'][i]['intrinsic'] for i in range(len(paths))], dim=0)
     extrinsic = torch.stack([output_dict['preds'][i]['extrinsic'] for i in range(len(paths))], dim=0)
 
-    print(wp_track.shape)
     torch.save(wp_track.float().unsqueeze(0), './output/inference_wp_track.pt')
     torch.save(wp.float().unsqueeze(0), './output/inference_wp.pt')
-
-    wp_track = wp_track[:]
-    print(wp_track.shape)
 
     uvd = xyz_to_uvd(wp_track, intrinsic[0, :3, :3])
     images = torch.stack([img["img"] for img in imgs], dim=1)[0]
