@@ -16,111 +16,9 @@ from tqdm import tqdm
 from einops import rearrange
 from iopath.common.file_io import g_pathmgr
 
-from sm4rt import SM4RT
+from twist4r import Twist4R
+# from sm4rt import SM4RT
 from inference_multiview import inference
-
-
-def load_and_preprocess_images(image_path_list, mode="crop"):
-    if len(image_path_list) == 0:
-        raise ValueError("At least 1 image is required")
-
-    if mode not in ["crop", "pad"]:
-        raise ValueError("Mode must be either 'crop' or 'pad'")
-
-    images = []
-    shapes = set()
-    to_tensor = TF.ToTensor()
-    target_size = 518
-
-    for image_path in image_path_list:
-        # Open image
-        img = PIL.Image.open(image_path)
-
-        # If there's an alpha channel, blend onto white background:
-        if img.mode == "RGBA":
-            # Create white background
-            background = PIL.Image.new("RGBA", img.size, (255, 255, 255, 255))
-            # Alpha composite onto the white background
-            img = PIL.Image.alpha_composite(background, img)
-
-        # Now convert to "RGB" (this step assigns white for transparent areas)
-        img = img.convert("RGB")
-
-        width, height = img.size
-
-        if mode == "pad":
-            # Make the largest dimension 518px while maintaining aspect ratio
-            if width >= height:
-                new_width = target_size
-                new_height = round(height * (new_width / width) / 14) * 14  # Make divisible by 14
-            else:
-                new_height = target_size
-                new_width = round(width * (new_height / height) / 14) * 14  # Make divisible by 14
-        else:  # mode == "crop"
-            # Original behavior: set width to 518px
-            new_width = target_size
-            # Calculate height maintaining aspect ratio, divisible by 14
-            new_height = round(height * (new_width / width) / 14) * 14
-
-        # Resize with new dimensions (width, height)
-        img = img.resize((new_width, new_height), PIL.Image.Resampling.BICUBIC)
-        img = to_tensor(img)  # Convert to tensor (0, 1)
-
-        # Center crop height if it's larger than 518 (only in crop mode)
-        if mode == "crop" and new_height > target_size:
-            start_y = (new_height - target_size) // 2
-            img = img[:, start_y : start_y + target_size, :]
-
-        # For pad mode, pad to make a square of target_size x target_size
-        if mode == "pad":
-            h_padding = target_size - img.shape[1]
-            w_padding = target_size - img.shape[2]
-
-            if h_padding > 0 or w_padding > 0:
-                pad_top = h_padding // 2
-                pad_bottom = h_padding - pad_top
-                pad_left = w_padding // 2
-                pad_right = w_padding - pad_left
-
-                img = torch.nn.functional.pad(
-                    img, (pad_left, pad_right, pad_top, pad_bottom), mode="constant", value=1.0
-                )
-
-        shapes.add((img.shape[1], img.shape[2]))
-        images.append(img)
-
-    if len(shapes) > 1:
-        print(f"Warning: Found images with different shapes: {shapes}")
-        # Find maximum dimensions
-        max_height = max(shape[0] for shape in shapes)
-        max_width = max(shape[1] for shape in shapes)
-
-        # Pad images if necessary
-        padded_images = []
-        for img in images:
-            h_padding = max_height - img.shape[1]
-            w_padding = max_width - img.shape[2]
-
-            if h_padding > 0 or w_padding > 0:
-                pad_top = h_padding // 2
-                pad_bottom = h_padding - pad_top
-                pad_left = w_padding // 2
-                pad_right = w_padding - pad_left
-
-                img = torch.nn.functional.pad(
-                    img, (pad_left, pad_right, pad_top, pad_bottom), mode="constant", value=1.0
-                )
-            padded_images.append(img)
-        images = padded_images
-
-    images = torch.stack(images)  # concatenate images
-
-    if len(image_path_list) == 1:
-        if images.dim() == 3:
-            images = images.unsqueeze(0)
-
-    return images
-
 
 
 def _reproject_2d3d(trajs_uvd, intrs):
@@ -223,7 +121,7 @@ def create_gif_from_uv_frames(uvd, video, output_path, fps=2):
 
     frames = []
     T = uv_frames.shape[0]
-    for i in tqdm(range(T), desc="处理帧", total=T):
+    for i in tqdm(range(T), desc="Processing Frames", total=T):
         uv = uv_frames[i]
         d = d_frames[i]
         img = rgb
@@ -232,23 +130,70 @@ def create_gif_from_uv_frames(uvd, video, output_path, fps=2):
         frames.append(image_8bit)
     save(frames, output_path, fps=fps)
 
-def load_images(folder_or_list, verbose=True):
-    if verbose:
-        print(f">> Loading a list of {len(folder_or_list)} images")
+
+def load_images(folder_or_list, longsize=518):
+    # Assert longsize is divisible by 14
+    assert longsize % 14 == 0, f"longsize {longsize} must be divisible by 14"
+    
     imgs = []
+    
+    # First, load the first image to determine the global size
+    first_img_path = None
     for path in folder_or_list:
+        if path.lower().endswith(tuple([".jpg", ".jpeg", ".png"])):
+            first_img_path = path
+            break
+    
+    if first_img_path is None:
+        return imgs
+    
+    # Get the original size of the first image
+    with PIL.Image.open(first_img_path) as temp_img:
+        orig_w, orig_h = temp_img.size
+    
+    # Determine which dimension is the long side
+    if orig_w >= orig_h:
+        # Width is the long side
+        new_w = longsize
+        ratio = longsize / orig_w
+        new_h = orig_h * ratio
+    else:
+        # Height is the long side
+        new_h = longsize
+        ratio = longsize / orig_h
+        new_w = orig_w * ratio
+    
+    # Round short side to nearest multiple of 14
+    short_side = new_h if orig_w >= orig_h else new_w
+    short_side_rounded = round(short_side / 14) * 14
+    # Ensure it's at least 14
+    short_side_rounded = max(14, short_side_rounded)
+    
+    # Adjust the other dimension proportionally
+    if orig_w >= orig_h:
+        new_w = longsize
+        new_h = short_side_rounded
+    else:
+        new_h = longsize
+        new_w = short_side_rounded
+    
+    global_size = (new_w, new_h)  # (width, height)
+    
+    # Now process all images
+    for idx, path in enumerate(folder_or_list):
         if not path.lower().endswith(tuple([".jpg", ".jpeg", ".png"])):
             continue
+        
         img = PIL.ImageOps.exif_transpose(PIL.Image.open(path)).convert("RGB")
-        # img = img.resize((518, 518), PIL.Image.LANCZOS)
-        img = img.resize((518, 294), PIL.Image.LANCZOS)
-        true_shape = [img.size[::-1]] # true shape requires H, W
+        img = img.resize(global_size, PIL.Image.LANCZOS)
+        true_shape = [img.size[::-1]]  # true shape requires H, W
         imgs.append(dict(
             img=ImgNorm(img)[None],
             true_shape=np.int32(true_shape),
-            idx=len(imgs),
-            instance=str(len(imgs)),
+            idx=idx,
+            instance=str(idx),
         ))
+    
     return imgs
 
 
@@ -261,10 +206,11 @@ def main():
                         help='Path to the model checkpoint file')
     args = parser.parse_args()
 
-    model = SM4RT()
+    model = Twist4R()
+
     with g_pathmgr.open(args.ckpt, "rb") as f:
         model_ckpts = torch.load(f, map_location="cpu", weights_only=False)
-        
+    
     model_ckpts = model_ckpts["model"] if "model" in model_ckpts else model_ckpts
     new_ckpts = {}
     for k, v in model_ckpts.items():
@@ -272,9 +218,10 @@ def main():
             new_ckpts[k[7:]] = v 
         else:
             new_ckpts[k] = v
-            
+    
     model_ckpts = new_ckpts
-    model.load_state_dict(model_ckpts, strict=False)
+    missing_keys, unexpected_keys = model.load_state_dict(model_ckpts, strict=False)
+
     model = model.cuda().eval()
 
     input_dir = args.input
@@ -283,7 +230,7 @@ def main():
     print(paths)
     print(f"Processing {len(paths)} frames...")
 
-    imgs = load_images(paths, verbose=True)
+    imgs = load_images(paths)
 
     device = torch.device("cuda")
     output_dict = inference(imgs, model, device, dtype="bf16-mixed")
@@ -300,12 +247,8 @@ def main():
     print(wp_track.shape)
 
     uvd = xyz_to_uvd(wp_track, intrinsic[0, :3, :3])
-    image_names = []
-    for pat in ("*.png", "*.jpg"):
-        image_names += glob.glob(os.path.join(input_dir, pat))
-    image_names = sorted(image_names)
-    images = load_and_preprocess_images(image_names).to("cuda")[:len(paths)]
-    create_gif_from_uv_frames(uvd, images, f"./output/inference.gif", fps=4)
+    images = torch.stack([img["img"] for img in imgs], dim=1)[0]
+    create_gif_from_uv_frames(uvd[0], images, f"./output/inference.gif", fps=4)
 
 
 if __name__ == "__main__":
