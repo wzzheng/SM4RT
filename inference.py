@@ -16,8 +16,7 @@ from tqdm import tqdm
 from einops import rearrange
 from iopath.common.file_io import g_pathmgr
 
-from twist4r import Twist4R
-# from sm4rt import SM4RT
+from sm4rt import SM4RT
 from inference_multiview import inference
 
 
