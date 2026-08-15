@@ -205,7 +205,7 @@ def main():
                         help='Path to the model checkpoint file')
     args = parser.parse_args()
 
-    model = Twist4R()
+    model = SM4RT()
 
     with g_pathmgr.open(args.ckpt, "rb") as f:
         model_ckpts = torch.load(f, map_location="cpu", weights_only=False)
