@@ -148,7 +148,7 @@ class MotionBaseDecoder(nn.Module):
         pe[:, 1::2] = torch.cos(position * div_term)
         return pe.unsqueeze(1)
 
-    def forward(self, tokens: torch.Tensor, images: torch.Tensor, patch_start_idx: int, track_query_idx = 0,) -> torch.Tensor:
+    def forward(self, tokens: torch.Tensor, images: torch.Tensor, patch_start_idx: int) -> torch.Tensor:
         tokens = [tok[:,:,2:,] for tok in tokens]
         _, _, _, H, W = images.shape
         token_0 = tokens[0]
@@ -231,7 +231,7 @@ class SM4RT(nn.Module):
             predictions["pose_enc"] = pose_enc
         
         feature_list = [torch.cat([cam_token[:,i].unsqueeze(2), time_token[:,i].unsqueeze(2), patch_token[:,i]], dim=2,)[..., :1536] for i in range(4)]
-        aggregated_track_tokens_list = self.motion_base_decoder(feature_list, images=x, patch_start_idx=2, track_query_idx=0)
+        aggregated_track_tokens_list = self.motion_base_decoder(feature_list, images=x, patch_start_idx=2)
         
         with torch.autocast(device_type=next(self.parameters()).device.type, dtype=torch.float32):
             assign, _ = self.assign_head(aggregated_track_tokens_list, images=x, patch_start_idx=15, frames_chunk_size=4)
